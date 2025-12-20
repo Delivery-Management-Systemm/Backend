@@ -27,6 +27,9 @@ namespace UITour.Models
         public DbSet<VehicleDriverAssignment> VehicleDriverAssignments { get; set; }
         public DbSet<ExtraExpense> ExtraExpenses { get; set; }
         public DbSet<TripLog> TripLogs { get; set; }
+        public DbSet<TripDriver> TripDrivers { get; set; }
+        public DbSet<LicenseClass> LicenseClasses { get; set; }
+        public DbSet<DriverLicense> DriverLicenses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,16 +48,25 @@ namespace UITour.Models
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ================= TRIP =================
-            modelBuilder.Entity<Trip>()
-                .HasOne(t => t.Driver)
-                .WithMany()
-                .HasForeignKey(t => t.DriverID)
-                .OnDelete(DeleteBehavior.Restrict);
+            
 
             modelBuilder.Entity<Trip>()
                 .HasOne(t => t.Vehicle)
                 .WithMany()
                 .HasForeignKey(t => t.VehicleID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ================= TRIP - DRIVER (MANY TO MANY) =================
+            modelBuilder.Entity<TripDriver>()
+                .HasOne(td => td.Trip)
+                .WithMany(t => t.TripDrivers)
+                .HasForeignKey(td => td.TripID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TripDriver>()
+                .HasOne(td => td.Driver)
+                .WithMany(d => d.TripDrivers)
+                .HasForeignKey(td => td.DriverID)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ================= TRIP LOG =================
@@ -83,6 +95,25 @@ namespace UITour.Models
                 .WithMany(v => v.Maintenances)
                 .HasForeignKey(m => m.VehicleID);
 
+            // ================= VEHICLE - REQUIRED LICENSE =================
+            modelBuilder.Entity<Vehicle>()
+                .HasOne(v => v.RequiredLicenseClass)
+                .WithMany()
+                .HasForeignKey(v => v.RequiredLicenseClassID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ================= DRIVER LICENSE =================
+            modelBuilder.Entity<DriverLicense>()
+                .HasOne(dl => dl.Driver)
+                .WithMany(d => d.DriverLicenses)
+                .HasForeignKey(dl => dl.DriverID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DriverLicense>()
+                .HasOne(dl => dl.LicenseClass)
+                .WithMany()
+                .HasForeignKey(dl => dl.LicenseClassID)
+                .OnDelete(DeleteBehavior.Restrict);
 
             //index
             modelBuilder.Entity<Trip>()
@@ -96,6 +127,15 @@ namespace UITour.Models
 
             modelBuilder.Entity<Vehicle>()
                 .HasIndex(v => v.LicensePlate)
+                .IsUnique();
+
+            modelBuilder.Entity<TripDriver>()
+                .HasIndex(td => new { td.TripID, td.DriverID })
+                .IsUnique();
+
+            // Driver - License (unique)
+            modelBuilder.Entity<DriverLicense>()
+                .HasIndex(dl => new { dl.DriverID, dl.LicenseClassID })
                 .IsUnique();
         }
     }
