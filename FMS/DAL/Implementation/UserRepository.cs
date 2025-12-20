@@ -1,7 +1,7 @@
-﻿using UITour.DAL.Interfaces.Repositories;
-using UITour.Models;
+﻿using FMS.DAL.Interfaces.Repositories;
+using FMS.Models;
 
-namespace UITour.DAL.Repositories
+namespace FMS.DAL.Repositories
 {
     public class UserRepository : GenericRepository<User>, IUserRepository
     {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ViewEngines;
 using System.ComponentModel.DataAnnotations;
 
-namespace UITour.Models
+namespace FMS.Models
 {
     public class User
     {

@@ -1,11 +1,12 @@
 ﻿using FMS.DAL.Interfaces;
+using FMS.DAL.Interfaces.Repositories;
+using FMS.DAL.Repositories;
+using FMS.Models;
 using Microsoft.EntityFrameworkCore;
-using UITour.DAL.Interfaces;
-using UITour.DAL.Interfaces.Repositories;
-using UITour.DAL.Repositories;
-using UITour.Models;
 
-namespace UITour.DAL
+
+
+namespace FMS.DAL
 {
     //tao db context 1 lan duy nhat
     public class UnitOfWork : IUnitOfWork
@@ -17,12 +18,14 @@ namespace UITour.DAL
             _context = context;
           
             Users = new UserRepository(_context);
-           
+            Drivers = new DriverRepository(_context);
+            Vehicles = new VehicleRepository(_context);
         }
 
     
         public IUserRepository Users { get; }
-      
+        public IDriverRepository Drivers { get; }
+        public IVehicleRepository Vehicles { get; }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
