@@ -8,7 +8,7 @@ using System.Globalization;
 using System.Reflection.Emit;
 using System.Transactions;
 
-namespace UITour.Models
+namespace FMS.Models
 {
     public class FMSDbContext : DbContext
     {

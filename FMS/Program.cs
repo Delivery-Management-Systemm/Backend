@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using UITour.Models;
+using FMS.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
