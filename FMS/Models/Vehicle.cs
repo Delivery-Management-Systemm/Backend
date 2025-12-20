@@ -17,6 +17,12 @@ namespace FMS.Models
         public Driver? Driver { get; set; }
 
         public ICollection<Maintenance>? Maintenances { get; set; }
+        
+        
+        // ====== LICENSE REQUIREMENT ======
+        [ForeignKey(nameof(RequiredLicenseClass))]
+        public int RequiredLicenseClassID { get; set; }
+        public LicenseClass RequiredLicenseClass { get; set; }
 
         public ICollection<VehicleDriverAssignment>? VehicleAssignments { get; set; }
         public ICollection<Trip>? Trips { get; set; }

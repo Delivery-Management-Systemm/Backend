@@ -14,10 +14,7 @@ namespace FMS.Models
         public int VehicleID { get; set; }
         public Vehicle Vehicle { get; set; }
 
-        [ForeignKey(nameof(Driver))]
-        public int DriverID { get; set; }
-        public Driver Driver { get; set; }
-
+       
         // ====== THÔNG TIN CHUYẾN ======
 
         // ====== THỜI GIAN ======
@@ -42,5 +39,6 @@ namespace FMS.Models
         public ICollection<FuelRecord>? FuelRecords { get; set; }
         public ICollection<ExtraExpense>? ExtraExpenses { get; set; }
         public ICollection<TripLog>? TripLogs { get; set; }
+        public ICollection<TripDriver> TripDrivers { get; set; }
     }
 }
