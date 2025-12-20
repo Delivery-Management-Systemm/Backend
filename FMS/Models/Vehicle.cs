@@ -19,6 +19,9 @@ namespace FMS.Models
         public ICollection<Maintenance>? Maintenances { get; set; }
 
         public ICollection<VehicleDriverAssignment>? VehicleAssignments { get; set; }
+        public ICollection<Trip>? Trips { get; set; }
+
+        public ICollection<FuelRecord>? FuelRecords { get; set; }
 
     }
 }
