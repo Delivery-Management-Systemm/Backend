@@ -1,4 +1,5 @@
-﻿using UITour.DAL.Interfaces.Repositories;
+﻿
+using FMS.DAL.Interfaces.Repositories;
 
 namespace FMS.DAL.Interfaces
 {
@@ -7,7 +8,8 @@ namespace FMS.DAL.Interfaces
     {
 
         IUserRepository Users { get; }
-
+        IDriverRepository Drivers { get; }
+        IVehicleRepository Vehicles { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

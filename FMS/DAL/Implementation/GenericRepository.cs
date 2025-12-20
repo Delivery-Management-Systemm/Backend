@@ -1,9 +1,8 @@
 ﻿using System.Linq.Expressions;
 using FMS.DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using UITour.DAL.Interfaces;
 
-namespace UITour.DAL.Repositories
+namespace FMS.DAL.Repositories
 {
     //implement cac method cua iRepository
     public class GenericRepository<TEntity> : IRepository<TEntity> where TEntity : class
