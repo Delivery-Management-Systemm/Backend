@@ -16,6 +16,9 @@ namespace FMS.Models
 
         // Lịch sử gán xe
         public ICollection<VehicleDriverAssignment>? VehicleAssignments { get; set; }
+        public ICollection<Trip>? Trips { get; set; }
+        public ICollection<FuelRecord>? FuelRecords { get; set; }
+
 
     }
 }
