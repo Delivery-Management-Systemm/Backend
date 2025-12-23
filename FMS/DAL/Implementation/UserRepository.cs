@@ -1,7 +1,7 @@
-﻿using FMS.DAL.Interfaces.Repositories;
+﻿using FMS.DAL.Interfaces;
 using FMS.Models;
 
-namespace FMS.DAL.Repositories
+namespace FMS.DAL.Implementation
 {
     public class UserRepository : GenericRepository<User>, IUserRepository
     {

@@ -2,7 +2,7 @@
 using FMS.DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace FMS.DAL.Repositories
+namespace FMS.DAL.Implementation
 {
     //implement cac method cua iRepository
     public class GenericRepository<TEntity> : IRepository<TEntity> where TEntity : class

@@ -1,8 +1,7 @@
 ﻿using FMS.Models;
-using FMS.DAL.Interfaces;
 using FMS.Models;
 
-namespace FMS.DAL.Interfaces.Repositories
+namespace FMS.DAL.Interfaces
 {
     public interface IVehicleRepository : IRepository<Vehicle>
     {
