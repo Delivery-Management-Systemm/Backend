@@ -21,6 +21,9 @@ namespace FMS.DAL.Implementation
             Trips = new TripRepository(_context);
             DriverLicenses = new DriverLicenseRepository(_context);
             ExtraExpenses = new ExtraExpenseRepository(_context);
+            FuelRecords = new FuelRecordRepository(_context);
+            LicenseClasses = new LicenseClassRepository(_context);
+            Maintenances = new MaintenanceRepository(_context);
         }
 
 
@@ -30,6 +33,9 @@ namespace FMS.DAL.Implementation
         public ITripRepository Trips { get; }
         public IDriverLicenseRepository DriverLicenses { get; }
         public IExtraExpenseRepository ExtraExpenses { get; }
+        public IFuelRecordRepository FuelRecords { get; }
+        public ILicenseClassRepository LicenseClasses { get; }
+        public IMaintenanceRepository Maintenances { get; }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
