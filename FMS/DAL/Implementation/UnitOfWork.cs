@@ -1,12 +1,10 @@
 ﻿using FMS.DAL.Interfaces;
-using FMS.DAL.Interfaces.Repositories;
-using FMS.DAL.Repositories;
 using FMS.Models;
 using Microsoft.EntityFrameworkCore;
 
 
 
-namespace FMS.DAL
+namespace FMS.DAL.Implementation
 {
     //tao db context 1 lan duy nhat
     public class UnitOfWork : IUnitOfWork
@@ -16,16 +14,22 @@ namespace FMS.DAL
         public UnitOfWork(FMSDbContext context)
         {
             _context = context;
-          
+
             Users = new UserRepository(_context);
             Drivers = new DriverRepository(_context);
             Vehicles = new VehicleRepository(_context);
+            Trips = new TripRepository(_context);
+            DriverLicenses = new DriverLicenseRepository(_context);
+            ExtraExpenses = new ExtraExpenseRepository(_context);
         }
 
-    
+
         public IUserRepository Users { get; }
         public IDriverRepository Drivers { get; }
         public IVehicleRepository Vehicles { get; }
+        public ITripRepository Trips { get; }
+        public IDriverLicenseRepository DriverLicenses { get; }
+        public IExtraExpenseRepository ExtraExpenses { get; }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
