@@ -1,9 +1,8 @@
-﻿using FMS.DAL.Interfaces.Repositories;
-using FMS.DAL.Repositories;
+﻿using FMS.DAL.Interfaces;
 using FMS.Models;
 
 
-namespace FMS.DAL.Repositories
+namespace FMS.DAL.Implementation
 {
     public class VehicleRepository : GenericRepository<Vehicle>, IVehicleRepository
     {
