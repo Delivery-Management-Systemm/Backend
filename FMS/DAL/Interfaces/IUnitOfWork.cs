@@ -12,6 +12,12 @@
         IDriverLicenseRepository DriverLicenses { get; }
 
         IExtraExpenseRepository ExtraExpenses { get; }
+        IFuelRecordRepository FuelRecords { get; }
+        ILicenseClassRepository LicenseClasses { get; }
+        IMaintenanceRepository Maintenances { get; }
+        ITripDriverRepository TripDrivers { get; }
+        ITripLogRepository TripLogs { get; }
+        IVehicleDriverAssignmentRepository VehicleDriverAssignments { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

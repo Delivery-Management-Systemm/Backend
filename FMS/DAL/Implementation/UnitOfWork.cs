@@ -24,6 +24,9 @@ namespace FMS.DAL.Implementation
             FuelRecords = new FuelRecordRepository(_context);
             LicenseClasses = new LicenseClassRepository(_context);
             Maintenances = new MaintenanceRepository(_context);
+            TripDrivers = new TripDriverRepository(_context);
+            TripLogs = new TripLogRepository(_context);
+            VehicleDriverAssignments = new VehicleDriverAssignmentRepository(_context);
         }
 
 
@@ -36,6 +39,9 @@ namespace FMS.DAL.Implementation
         public IFuelRecordRepository FuelRecords { get; }
         public ILicenseClassRepository LicenseClasses { get; }
         public IMaintenanceRepository Maintenances { get; }
+        public ITripDriverRepository TripDrivers { get; }
+        public ITripLogRepository TripLogs { get; }
+        public IVehicleDriverAssignmentRepository VehicleDriverAssignments { get; }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

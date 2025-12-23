@@ -1,6 +1,8 @@
-﻿namespace FMS.DAL.Interfaces
+﻿using FMS.Models;
+
+namespace FMS.DAL.Interfaces
 {
-    public interface IFuelRecordRepository
+    public interface IFuelRecordRepository: IRepository<FuelRecord>
     {
     }
 }
