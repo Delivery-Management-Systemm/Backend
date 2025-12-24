@@ -1,6 +1,6 @@
 ﻿using FMS.DAL.Interfaces;
 using FMS.Models;
-using FMS.ServiceLayer.DTO;
+using FMS.ServiceLayer.DTO.UserDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;

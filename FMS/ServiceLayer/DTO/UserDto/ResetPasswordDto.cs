@@ -1,4 +1,4 @@
-﻿namespace FMS.ServiceLayer.DTO
+﻿namespace FMS.ServiceLayer.DTO.UserDto
 {
     public class ResetPasswordDto
     {

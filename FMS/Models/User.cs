@@ -12,7 +12,7 @@ namespace FMS.Models
         public DateTime RegisteredAt { get; set; }
         [StringLength(200)] public string? PasswordHash { get; set; }
 
-        public DateTime LastLoginAt { get; set; }
+        public DateTime? LastLoginAt { get; set; }
 
         // Role (Giới hạn 20 ký tự như trong SQL)
         [StringLength(20)] public string? Role { get; set; }

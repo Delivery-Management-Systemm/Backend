@@ -76,6 +76,7 @@ builder.Services.AddScoped<IVehicleDriverAssignmentRepository, VehicleDriverAssi
 // Service registrations
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IDriverService, DriverService>();
 
 
 

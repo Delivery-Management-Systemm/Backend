@@ -1,5 +1,5 @@
 ﻿using FMS.Models;
-using FMS.ServiceLayer.DTO;
+using FMS.ServiceLayer.DTO.UserDto;
 
 namespace FMS.ServiceLayer.Interface
 {
