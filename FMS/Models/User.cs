@@ -17,7 +17,8 @@ namespace FMS.Models
         // Role (Giới hạn 20 ký tự như trong SQL)
         [StringLength(20)] public string? Role { get; set; }
         public string? Department { get; set; }
-
+        
+        public string? Avatar { get; set; }
         public bool IsReceivingEmailNofication { get; set; } = false;
         public bool IsReceivingMaintainNofication { get; set; } = false;
         public bool IsReceivingGeoNofication { get; set; } = false;
