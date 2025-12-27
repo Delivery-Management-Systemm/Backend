@@ -23,6 +23,7 @@ namespace FMS.ServiceLayer.Implementation
                     DriverID = d.DriverID,
                     Name = d.FullName,
                     Phone = d.Phone,
+                    ExperienceYears = d.ExperienceYears,
 
                     LicenseNumber = d.DriverLicenses
                     .OrderByDescending(l => l.ExpiryDate)

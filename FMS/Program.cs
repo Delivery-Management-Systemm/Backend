@@ -72,6 +72,8 @@ builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 builder.Services.AddScoped<ITripDriverRepository, TripDriverRepository>();
 builder.Services.AddScoped<ITripLogRepository, TripLogRepository>();
 builder.Services.AddScoped<IVehicleDriverAssignmentRepository, VehicleDriverAssignmentRepository>();
+builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
+builder.Services.AddScoped<IMaintenanceServiceRepository, MaintenanceServiceRepository>();
 
 // Service registrations
 builder.Services.AddScoped<IUserService, UserService>();

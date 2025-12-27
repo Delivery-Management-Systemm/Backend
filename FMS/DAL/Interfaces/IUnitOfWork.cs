@@ -18,6 +18,9 @@
         ITripDriverRepository TripDrivers { get; }
         ITripLogRepository TripLogs { get; }
         IVehicleDriverAssignmentRepository VehicleDriverAssignments { get; }
+        IMaintenanceServiceRepository MaintenanceServices { get; }
+        IServiceRepository Services { get; }
+
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

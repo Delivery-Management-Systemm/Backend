@@ -10,9 +10,16 @@ namespace FMS.Models
         public Vehicle Vehicle { get; set; }
         public DateTime ScheduledDate { get; set; }
         public DateTime? FinishedDate { get; set; }
-        public string Description { get; set; }
-        public double? Cost { get; set; }
+        [StringLength(200)]
+        public string? GarageName { get; set; }
+
+        [StringLength(100)]
+        public string? TechnicianName { get; set; }
+
+        public double TotalCost { get; set; } //TotalCost = SUM(MaintenanceItems.TotalPrice)
+
         [StringLength(20)] public string? MaintenanceStatus { get; set; }
+        public ICollection<MaintenanceService>? MaintenanceServices { get; set; }
 
     }
 }
