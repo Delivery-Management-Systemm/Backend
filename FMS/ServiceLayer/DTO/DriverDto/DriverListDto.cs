@@ -8,7 +8,7 @@
 
         public string LicenseNumber { get; set; } = "N/A";
         public DateTime? LicenseExpiry { get; set; }
-
+        public int ExperienceYears { get; set; }
         public string AssignedVehicle { get; set; } = "Chưa gán";
 
         public int TotalTrips { get; set; }

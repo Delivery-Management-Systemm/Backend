@@ -31,6 +31,8 @@ namespace FMS.Models
         public DbSet<LicenseClass> LicenseClasses { get; set; }
         public DbSet<DriverLicense> DriverLicenses { get; set; }
 
+        public DbSet<MaintenanceService> MaintenanceServices { get; set; }
+        public DbSet<Service> Services { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -113,6 +115,19 @@ namespace FMS.Models
                 .HasOne(dl => dl.LicenseClass)
                 .WithMany()
                 .HasForeignKey(dl => dl.LicenseClassID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ================= MAINTENANCE - SS =================
+            modelBuilder.Entity<MaintenanceService>()
+                .HasOne(mi => mi.Maintenance)
+                .WithMany(m => m.MaintenanceServices)
+                .HasForeignKey(mi => mi.MaintenanceID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<MaintenanceService>()
+                .HasOne(mi => mi.Service)
+                .WithMany()
+                .HasForeignKey(mi => mi.ServiceID)
                 .OnDelete(DeleteBehavior.Restrict);
 
             //index
