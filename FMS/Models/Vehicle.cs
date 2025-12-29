@@ -28,6 +28,8 @@ namespace FMS.Models
         public ICollection<Trip>? Trips { get; set; }
 
         public ICollection<FuelRecord>? FuelRecords { get; set; }
+        public ICollection<EmergencyReport> EmergencyReports { get; set; }
+
 
     }
 }

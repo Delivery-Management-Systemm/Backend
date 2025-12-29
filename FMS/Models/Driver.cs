@@ -22,6 +22,8 @@ namespace FMS.Models
 
         public ICollection<FuelRecord>? FuelRecords { get; set; }
         public ICollection<DriverLicense>? DriverLicenses { get; set; }
+        public ICollection<EmergencyReport> EmergencyReports { get; set; }
+
 
 
     }

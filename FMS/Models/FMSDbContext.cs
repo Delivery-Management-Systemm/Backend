@@ -28,11 +28,16 @@ namespace FMS.Models
         public DbSet<ExtraExpense> ExtraExpenses { get; set; }
         public DbSet<TripLog> TripLogs { get; set; }
         public DbSet<TripDriver> TripDrivers { get; set; }
+
+        public DbSet<TripStep> TripSteps { get; set; }
         public DbSet<LicenseClass> LicenseClasses { get; set; }
         public DbSet<DriverLicense> DriverLicenses { get; set; }
 
         public DbSet<MaintenanceService> MaintenanceServices { get; set; }
         public DbSet<Service> Services { get; set; }
+
+        public DbSet<EmergencyReport> EmergencyReports { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -76,6 +81,18 @@ namespace FMS.Models
                 .HasOne(tl => tl.Trip)
                 .WithMany(t => t.TripLogs)
                 .HasForeignKey(tl => tl.TripID);
+
+
+            // ================= TRIP STEP =================
+            modelBuilder.Entity<TripStep>()
+                .HasOne(ts => ts.Trip)
+                .WithMany(t => t.TripSteps)
+                .HasForeignKey(ts => ts.TripID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TripStep>()
+                .HasIndex(ts => new { ts.TripID, ts.StepKey })
+                .IsUnique();
 
             // ================= FUEL RECORD =================
             modelBuilder.Entity<FuelRecord>()
@@ -129,6 +146,25 @@ namespace FMS.Models
                 .WithMany()
                 .HasForeignKey(mi => mi.ServiceID)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // ================= Emergency Report =================
+            modelBuilder.Entity<EmergencyReport>()
+                .HasOne(e => e.Vehicle)
+                .WithMany(v => v.EmergencyReports)
+                .HasForeignKey(e => e.VehicleID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EmergencyReport>()
+                        .HasOne(e => e.Driver)
+                        .WithMany(d => d.EmergencyReports)
+                        .HasForeignKey(e => e.DriverID)
+                        .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<EmergencyReport>()
+                        .HasOne(e => e.Trip)
+                        .WithMany(t => t.EmergencyReports)
+                        .HasForeignKey(e => e.TripID)
+                        .OnDelete(DeleteBehavior.SetNull);
 
             //index
             modelBuilder.Entity<Trip>()
