@@ -5,6 +5,7 @@ namespace FMS.Models
 {
     public class VehicleDriverAssignment
     {
+        //nho chinh rang buoc driver chi dc 1 vehicle
         [Key]
         public int AssignmentID { get; set; }
 
@@ -14,7 +15,6 @@ namespace FMS.Models
         public DateTime AssignedFrom { get; set; }
         public DateTime? AssignedTo { get; set; }
 
- 
         public Vehicle Vehicle { get; set; }
 
         public Driver Driver { get; set; }
