@@ -30,6 +30,7 @@ namespace FMS.DAL.Implementation
             Services = new ServiceRepository(_context);
             MaintenanceServices = new MaintenanceServiceRepository(_context);
             TripSteps = new TripStepRepository(_context);
+            EmergencyReports = new EmergencyReportRepository(_context);
         }
 
 
@@ -48,6 +49,8 @@ namespace FMS.DAL.Implementation
         public IServiceRepository Services { get; }
         public IMaintenanceServiceRepository MaintenanceServices { get; }
         public ITripStepRepository TripSteps { get; }
+        public IEmergencyReportRepository EmergencyReports { get; }
+
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

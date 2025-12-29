@@ -49,5 +49,7 @@ namespace FMS.Models
         public ICollection<TripLog>? TripLogs { get; set; }
         public ICollection<TripDriver> TripDrivers { get; set; }
         public ICollection<TripStep>? TripSteps { get; set; }
+        public ICollection<EmergencyReport> EmergencyReports { get; set; }
+
     }
 }

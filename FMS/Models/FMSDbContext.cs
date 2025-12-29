@@ -35,6 +35,9 @@ namespace FMS.Models
 
         public DbSet<MaintenanceService> MaintenanceServices { get; set; }
         public DbSet<Service> Services { get; set; }
+
+        public DbSet<EmergencyReport> EmergencyReports { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -143,6 +146,25 @@ namespace FMS.Models
                 .WithMany()
                 .HasForeignKey(mi => mi.ServiceID)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // ================= Emergency Report =================
+            modelBuilder.Entity<EmergencyReport>()
+                .HasOne(e => e.Vehicle)
+                .WithMany(v => v.EmergencyReports)
+                .HasForeignKey(e => e.VehicleID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EmergencyReport>()
+                        .HasOne(e => e.Driver)
+                        .WithMany(d => d.EmergencyReports)
+                        .HasForeignKey(e => e.DriverID)
+                        .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<EmergencyReport>()
+                        .HasOne(e => e.Trip)
+                        .WithMany(t => t.EmergencyReports)
+                        .HasForeignKey(e => e.TripID)
+                        .OnDelete(DeleteBehavior.SetNull);
 
             //index
             modelBuilder.Entity<Trip>()
