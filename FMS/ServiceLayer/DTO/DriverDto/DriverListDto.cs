@@ -5,10 +5,10 @@
         public int DriverID { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
 
-        public string LicenseNumber { get; set; } = "N/A";
-        public DateTime? LicenseExpiry { get; set; }
-        public int ExperienceYears { get; set; }
+        public List<string> Licenses { get; set; } = new();
+        public int? ExperienceYears { get; set; }
         public string AssignedVehicle { get; set; } = "Chưa gán";
 
         public int TotalTrips { get; set; }

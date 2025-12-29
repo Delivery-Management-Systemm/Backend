@@ -25,19 +25,16 @@ namespace FMS.ServiceLayer.Implementation
                     Phone = d.Phone,
                     ExperienceYears = d.ExperienceYears,
 
-                    LicenseNumber = d.DriverLicenses
-                    .OrderByDescending(l => l.ExpiryDate)
-                    .Select(l => l.LicenseClass.Code)
-                    .FirstOrDefault() ?? "N/A",
-
-                    LicenseExpiry = d.DriverLicenses
-                    .OrderByDescending(l => l.ExpiryDate)
-                    .Select(l => l.ExpiryDate)
-                    .FirstOrDefault(),
+                    Licenses = d.DriverLicenses
+                                .Select(l => l.LicenseClass.Code)
+                                .Distinct()
+                                .ToList(),
 
                     AssignedVehicle = d.VehicleAssignments
-                    .Select(a => a.Vehicle.LicensePlate)
-                    .FirstOrDefault() ?? "Chưa gán",
+                                .Where(a=>a.AssignedTo == null)
+                                .OrderByDescending(a => a.AssignedFrom)
+                                .Select(a => a.Vehicle.LicensePlate)
+                                .FirstOrDefault() ?? "Chưa gán",
 
                     TotalTrips = d.TotalTrips,
                     Rating = d.Rating,
