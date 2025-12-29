@@ -34,11 +34,22 @@ namespace FMS.Models
 
         [Required, StringLength(20)]
         public string TripStatus { get; set; }
-        // planned | in-progress | completed | canceled
+        // planned | waiting | in_transit | delivered | canceled
+
+
+        // ====== KHÁCH HÀNG ======
+        [StringLength(200)]
+        public string? CustomerName { get; set; }
+
+        [StringLength(20)]
+        public string? CustomerPhone { get; set; }
 
         public ICollection<FuelRecord>? FuelRecords { get; set; }
         public ICollection<ExtraExpense>? ExtraExpenses { get; set; }
         public ICollection<TripLog>? TripLogs { get; set; }
         public ICollection<TripDriver> TripDrivers { get; set; }
+        public ICollection<TripStep>? TripSteps { get; set; }
+        public ICollection<EmergencyReport> EmergencyReports { get; set; }
+
     }
 }

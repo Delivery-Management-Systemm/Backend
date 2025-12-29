@@ -20,7 +20,8 @@
         IVehicleDriverAssignmentRepository VehicleDriverAssignments { get; }
         IMaintenanceServiceRepository MaintenanceServices { get; }
         IServiceRepository Services { get; }
-
+        ITripStepRepository TripSteps { get; }
+        IEmergencyReportRepository EmergencyReports { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }
