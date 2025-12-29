@@ -29,6 +29,7 @@ namespace FMS.DAL.Implementation
             VehicleDriverAssignments = new VehicleDriverAssignmentRepository(_context);
             Services = new ServiceRepository(_context);
             MaintenanceServices = new MaintenanceServiceRepository(_context);
+            TripSteps = new TripStepRepository(_context);
         }
 
 
@@ -46,6 +47,7 @@ namespace FMS.DAL.Implementation
         public IVehicleDriverAssignmentRepository VehicleDriverAssignments { get; }
         public IServiceRepository Services { get; }
         public IMaintenanceServiceRepository MaintenanceServices { get; }
+        public ITripStepRepository TripSteps { get; }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

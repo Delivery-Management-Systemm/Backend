@@ -28,6 +28,8 @@ namespace FMS.Models
         public DbSet<ExtraExpense> ExtraExpenses { get; set; }
         public DbSet<TripLog> TripLogs { get; set; }
         public DbSet<TripDriver> TripDrivers { get; set; }
+
+        public DbSet<TripStep> TripSteps { get; set; }
         public DbSet<LicenseClass> LicenseClasses { get; set; }
         public DbSet<DriverLicense> DriverLicenses { get; set; }
 
@@ -76,6 +78,18 @@ namespace FMS.Models
                 .HasOne(tl => tl.Trip)
                 .WithMany(t => t.TripLogs)
                 .HasForeignKey(tl => tl.TripID);
+
+
+            // ================= TRIP STEP =================
+            modelBuilder.Entity<TripStep>()
+                .HasOne(ts => ts.Trip)
+                .WithMany(t => t.TripSteps)
+                .HasForeignKey(ts => ts.TripID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TripStep>()
+                .HasIndex(ts => new { ts.TripID, ts.StepKey })
+                .IsUnique();
 
             // ================= FUEL RECORD =================
             modelBuilder.Entity<FuelRecord>()
