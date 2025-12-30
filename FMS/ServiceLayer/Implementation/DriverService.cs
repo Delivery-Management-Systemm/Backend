@@ -44,6 +44,33 @@ namespace FMS.ServiceLayer.Implementation
             return drivers;
 
         }
+
+        public async Task<List<DriverHistoryDto>> GetDriverHistoryAsync(int driverId)
+        {
+            if (driverId == null)
+                throw new ArgumentException("Driver id not found");
+            var history = await _unitOfWork.TripDrivers.Query()
+                    .Where(td => td.DriverID == driverId)
+                    .Include(td => td.Driver)
+                    .Include(td => td.Trip)
+                        .ThenInclude(t => t.Vehicle)
+                    .Select(td => new DriverHistoryDto
+                    {
+                        DriverID = td.DriverID,
+                        TripDate = td.Trip.StartTime,
+                        DriverName = td.Driver.FullName,
+                        VehiclePlate = td.Trip.Vehicle.LicensePlate,
+                        Route = td.Trip.StartLocation + " - " + td.Trip.EndLocation,
+                        DistanceKm = td.Trip.TotalDistanceKm,
+                        DurationMinutes = td.Trip.EndTime != null
+                            ? EF.Functions.DateDiffMinute(td.Trip.StartTime, td.Trip.EndTime)
+                            : (int?)null,
+                        TripRating = td.TripRating
+                    })
+                    .OrderByDescending(x => x.TripDate)
+                    .ToListAsync();
+            return history;
+        }
     }
 
 }
