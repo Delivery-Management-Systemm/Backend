@@ -74,11 +74,14 @@ builder.Services.AddScoped<ITripLogRepository, TripLogRepository>();
 builder.Services.AddScoped<IVehicleDriverAssignmentRepository, VehicleDriverAssignmentRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IMaintenanceServiceRepository, MaintenanceServiceRepository>();
+builder.Services.AddScoped<ITripStepRepository, TripStepRepository>();
+builder.Services.AddScoped<IEmergencyReportRepository, EmergencyReportRepository>();
 
 // Service registrations
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IDriverService, DriverService>();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 
 

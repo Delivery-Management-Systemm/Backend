@@ -11,6 +11,6 @@ namespace FMS.Models
         public string Code { get; set; }   // B2, C, D, FC, FD...
 
         [StringLength(200)]
-        public string? Description { get; set; }
+        public string? LicenseDescription { get; set; }
     }
 }
