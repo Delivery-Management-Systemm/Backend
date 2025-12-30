@@ -18,6 +18,7 @@ public class TripDriver
 
     public DateTime AssignedFrom { get; set; }
     public DateTime? AssignedTo { get; set; }
+    public double? TripRating { get; set; }
 
     public Trip Trip { get; set; }
     public Driver Driver { get; set; }

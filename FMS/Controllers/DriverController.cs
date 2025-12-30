@@ -29,5 +29,18 @@ namespace FMS.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+        [HttpGet("{driverId}/history")]
+        public async Task<IActionResult> GetDriverHistory(int driverId)
+        {
+            try
+            {
+                var history = await _driverService.GetDriverHistoryAsync(driverId);
+                return Ok(history);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 }
