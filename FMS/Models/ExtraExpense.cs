@@ -14,7 +14,7 @@ public class ExtraExpense
     [Required, StringLength(50)]
     public string ExpenseType { get; set; }
 
-    public double Amount { get; set; }
+    public decimal Amount { get; set; }
     public DateTime ExpenseDate { get; set; }
 
     public string? Location { get; set; }
