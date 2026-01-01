@@ -82,5 +82,47 @@ namespace FMS.ServiceLayer.Implementation
                     await query.SumAsync(t => t.TotalDistanceKm ?? 0))
             };
         }
+
+        public async Task<List<OrderListDto>> GetOrdersAsync()
+        {
+            var trips = await _unitOfWork.Trips.Query()
+                                        .Include(t => t.Vehicle)
+                                        .Include(t => t.TripDrivers)
+                                            .ThenInclude(td => td.Driver)
+                                        .Include(t => t.TripSteps)
+                                        .Include(t => t.ExtraExpenses)
+                                        .ToListAsync();
+
+            var result = trips.Select(t => new OrderListDto
+            {
+                Id = t.TripID,
+                Customer = t.CustomerName,
+                Contact = t.CustomerPhone,
+                Pickup = t.StartLocation,
+                Dropoff = t.EndLocation,
+                Vehicle = t.Vehicle.LicensePlate,
+                Driver = t.TripDrivers
+                            .OrderByDescending(td => td.AssignedFrom)
+                            .Select(td => td.Driver.FullName)
+                            .FirstOrDefault(),
+
+                Status = t.TripStatus,
+
+                Steps = t.TripSteps
+                    .OrderBy(s => s.TripStepID)
+                    .Select(s => new TripStepDto
+                    {
+                        Key = s.StepKey,
+                        Label = s.StepLabel,
+                        Done = s.IsDone,
+                        Time = s.ConfirmedAt != null
+                            ? s.ConfirmedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
+                            : null
+                    }).ToList(),
+
+                Cost = $"{t.ExtraExpenses.Sum(e => e.Amount):N0}đ"
+            }).ToList();
+            return result;
+        }
     }
 }
