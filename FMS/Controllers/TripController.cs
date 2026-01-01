@@ -26,5 +26,11 @@ namespace FMS.Controllers
             var stats = await _tripService.GetTripStatsAsync();
             return Ok(stats);
         }
+        [HttpGet("/orders")]
+        public async Task<IActionResult> GetOrdersAsync()
+        {
+            var orders = await _tripService.GetOrdersAsync();
+            return Ok(orders);
+        }
     }
 }
