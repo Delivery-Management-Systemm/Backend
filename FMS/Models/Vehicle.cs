@@ -24,7 +24,7 @@ namespace FMS.Models
         public int RequiredLicenseClassID { get; set; }
         public LicenseClass RequiredLicenseClass { get; set; }
 
-        public ICollection<VehicleDriverAssignment>? VehicleAssignments { get; set; }
+        //public ICollection<VehicleDriverAssignment>? VehicleAssignments { get; set; }
         public ICollection<Trip>? Trips { get; set; }
 
         public ICollection<FuelRecord>? FuelRecords { get; set; }

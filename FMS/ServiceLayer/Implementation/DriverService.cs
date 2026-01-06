@@ -17,7 +17,9 @@ namespace FMS.ServiceLayer.Implementation
         {
             var drivers = await _unitOfWork.Drivers.Query()
                 .Include(d => d.DriverLicenses).ThenInclude(dl => dl.LicenseClass)
-                .Include(d => d.VehicleAssignments).ThenInclude(va => va.Vehicle)
+                .Include(d => d.TripDrivers)
+                    .ThenInclude(td => td.Trip)
+                    .ThenInclude(t => t.Vehicle)
                 .Select(d => new DriverListDto
                 {
                     DriverID = d.DriverID,
@@ -30,11 +32,11 @@ namespace FMS.ServiceLayer.Implementation
                                 .Distinct()
                                 .ToList(),
 
-                    AssignedVehicle = d.VehicleAssignments
-                                .Where(a=>a.AssignedTo == null)
-                                .OrderByDescending(a => a.AssignedFrom)
-                                .Select(a => a.Vehicle.LicensePlate)
-                                .FirstOrDefault() ?? "Chưa gán",
+                    AssignedVehicle = d.TripDrivers
+                        .Where(td => td.Trip.TripStatus == "In Progress") // Lấy chuyến đang chạy
+                        .OrderByDescending(td => td.Trip.StartTime)
+                        .Select(td => td.Trip.Vehicle.LicensePlate)
+                        .FirstOrDefault() ?? "Đang rảnh",
 
                     TotalTrips = d.TotalTrips,
                     Rating = d.Rating,
