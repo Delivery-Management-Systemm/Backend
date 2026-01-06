@@ -17,7 +17,7 @@ namespace FMS.Models
         [StringLength(20)] public string? DriverStatus { get; set; }
 
         // Lịch sử gán xe
-        public ICollection<VehicleDriverAssignment>? VehicleAssignments { get; set; }
+        //public ICollection<VehicleDriverAssignment>? VehicleAssignments { get; set; }
         public ICollection<TripDriver>? TripDrivers { get; set; }
 
         public ICollection<FuelRecord>? FuelRecords { get; set; }
