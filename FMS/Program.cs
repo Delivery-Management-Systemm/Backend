@@ -71,7 +71,7 @@ builder.Services.AddScoped<ILicenseClassRepository, LicenseClassRepository>();
 builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 builder.Services.AddScoped<ITripDriverRepository, TripDriverRepository>();
 builder.Services.AddScoped<ITripLogRepository, TripLogRepository>();
-builder.Services.AddScoped<IVehicleDriverAssignmentRepository, VehicleDriverAssignmentRepository>();
+//builder.Services.AddScoped<IVehicleDriverAssignmentRepository, VehicleDriverAssignmentRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IMaintenanceServiceRepository, MaintenanceServiceRepository>();
 builder.Services.AddScoped<ITripStepRepository, TripStepRepository>();

@@ -24,7 +24,7 @@ namespace FMS.Models
         public DbSet<Trip> Trips { get; set; }
         public DbSet<FuelRecord> FuelRecords { get; set; }
         public DbSet<Maintenance> Maintenances { get; set; }
-        public DbSet<VehicleDriverAssignment> VehicleDriverAssignments { get; set; }
+        //public DbSet<VehicleDriverAssignment> VehicleDriverAssignments { get; set; }
         public DbSet<ExtraExpense> ExtraExpenses { get; set; }
         public DbSet<TripLog> TripLogs { get; set; }
         public DbSet<TripDriver> TripDrivers { get; set; }
@@ -42,7 +42,7 @@ namespace FMS.Models
         {
             base.OnModelCreating(modelBuilder);
             // ================= DRIVER - VEHICLE ASSIGNMENT =================
-            modelBuilder.Entity<VehicleDriverAssignment>()
+            /*modelBuilder.Entity<VehicleDriverAssignment>()
                 .HasOne(vda => vda.Driver)
                 .WithMany(d => d.VehicleAssignments)
                 .HasForeignKey(vda => vda.DriverID)
@@ -52,7 +52,7 @@ namespace FMS.Models
                 .HasOne(vda => vda.Vehicle)
                 .WithMany(v => v.VehicleAssignments)
                 .HasForeignKey(vda => vda.VehicleID)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);*/
 
             // ================= TRIP =================
             

@@ -17,7 +17,7 @@
         IMaintenanceRepository Maintenances { get; }
         ITripDriverRepository TripDrivers { get; }
         ITripLogRepository TripLogs { get; }
-        IVehicleDriverAssignmentRepository VehicleDriverAssignments { get; }
+        
         IMaintenanceServiceRepository MaintenanceServices { get; }
         IServiceRepository Services { get; }
         ITripStepRepository TripSteps { get; }
