@@ -59,7 +59,7 @@ namespace FMS.Models
 
             modelBuilder.Entity<Trip>()
                 .HasOne(t => t.Vehicle)
-                .WithMany()
+                .WithMany(v => v.Trips)
                 .HasForeignKey(t => t.VehicleID)
                 .OnDelete(DeleteBehavior.Restrict);
 

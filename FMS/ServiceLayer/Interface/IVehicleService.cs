@@ -6,5 +6,6 @@ namespace FMS.ServiceLayer.Interface
     public interface IVehicleService
     {
         Task<List<VehicleListDto>> GetVehiclesAsync();
+        Task<VehicleDetailDto?> GetVehicleDetailsAsync(int vehicleId);
     }
 }
