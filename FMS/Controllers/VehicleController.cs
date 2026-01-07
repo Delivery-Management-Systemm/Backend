@@ -27,5 +27,22 @@ namespace FMS.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+        [HttpGet("{vehicleId}")]
+        public async Task<IActionResult> GetVehicleDetails(int vehicleId)
+        {
+            try
+            {
+                var vehicleDetails = await _vehicleService.GetVehicleDetailsAsync(vehicleId);
+                if (vehicleDetails == null)
+                {
+                    return NotFound(new { message = "Vehicle not found" });
+                }
+                return Ok(vehicleDetails);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 }
