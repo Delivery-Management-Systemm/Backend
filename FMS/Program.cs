@@ -83,6 +83,8 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IDriverService, DriverService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<ITripService, TripService>();
+builder.Services.AddScoped<IEmergencyReportService, EmergencyReportService>();
+builder.Services.AddScoped<IMaintenanceService, FMS.ServiceLayer.Implementation.MaintenanceService>();
 
 
 builder.Services.AddSwaggerGen(c =>
