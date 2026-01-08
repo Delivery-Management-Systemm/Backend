@@ -2,11 +2,13 @@
 using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FMS.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableRateLimiting("fixed")]
     public class DriverController: ControllerBase
     {
         private readonly IDriverService _driverService;

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using FMS.Models;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,6 +7,7 @@ using FMS.DAL.Interfaces;
 using FMS.DAL.Implementation;
 using FMS.ServiceLayer.Interface;
 using FMS.ServiceLayer.Implementation;
+using Microsoft.AspNetCore.RateLimiting;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,6 +58,15 @@ builder.Services.AddAuthorization(options =>
 });
 
 
+
+builder.Services.AddRateLimiter(options => {
+    options.AddFixedWindowLimiter("fixed", limiterOptions => {
+    limiterOptions.PermitLimit = 5; // số request cho phép
+    limiterOptions.Window = TimeSpan.FromSeconds(10); // trong 10 giây
+    limiterOptions.QueueLimit = 0; 
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 // DAL registrations
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -146,6 +156,7 @@ app.UseHttpsRedirection();
 app.UseCors(CorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 
