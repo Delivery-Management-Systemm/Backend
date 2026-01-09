@@ -124,5 +124,55 @@ namespace FMS.ServiceLayer.Implementation
             }).ToList();
             return result;
         }
+        public async Task<List<BookedTripListDto>> GetBookedTripListAsync()
+        {
+            var bookedTrips = await _unitOfWork.Trips.Query()
+                .Where(t => t.ScheduledStartTime != null && t.TripStatus == "Planned")
+                .Include(t => t.Vehicle)
+                .Include(t => t.TripDrivers)
+                    .ThenInclude(td => td.Driver)
+                .Select(t => new BookedTripListDto
+                {
+                    TripID = t.TripID,
+                    // Customer
+                    CustomerName = t.CustomerName,
+                    CustomerPhone = t.CustomerPhone,
+                    CustomerEmail = t.CustomerEmail,
+                    // Route
+                    PickupLocation = t.StartLocation,
+                    DropoffLocation = t.EndLocation,
+                    // Schedule
+                    ScheduledDate = t.ScheduledStartTime.Value.Date,
+                    ScheduledTime = t.ScheduledStartTime.Value.ToString("HH:mm"),
+                    // Request
+                    VehicleType = t.RequestedVehicleType,
+                    Passengers = t.RequestedPassengers,
+                    Cargo = t.RequestedCargo,
+                    // Assignment
+                    AssignedVehicleId = t.VehicleID,
+                    AssignedVehiclePlate = t.Vehicle.LicensePlate,
+                    AssignedDriverId = t.TripDrivers
+                                        .Where(td => td.Role == "Main Driver")
+                                        .Select(td => td.DriverID)
+                                        .FirstOrDefault(),
+                    AssignedDriverName = t.TripDrivers
+                                        .Where(td => td.Role == "Main Driver")
+                                        .Select(td => td.Driver.FullName)
+                                        .FirstOrDefault(),
+                    Status = t.TripStatus
+                })
+                .ToListAsync();
+            return bookedTrips;
+        }
+        public async Task<BookedTripStatsDto> GetBookedTripStatsAsync()
+        {
+            var trips = _unitOfWork.Trips.Query();
+            return new BookedTripStatsDto
+            {
+                Planned = await trips.CountAsync(t => t.TripStatus == "Planned"),
+                Confirmed = await trips.CountAsync(t => t.TripStatus == "Confirmed")
+            };
+
+        }
     }
 }
