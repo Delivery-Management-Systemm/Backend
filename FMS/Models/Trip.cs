@@ -11,8 +11,8 @@ namespace FMS.Models
         // ====== KHÓA NGOẠI ======
 
         [ForeignKey(nameof(Vehicle))]
-        public int VehicleID { get; set; }
-        public Vehicle Vehicle { get; set; }
+        public int? VehicleID { get; set; }
+        public Vehicle? Vehicle { get; set; }
 
        
         // ====== THÔNG TIN CHUYẾN ======
@@ -43,6 +43,20 @@ namespace FMS.Models
 
         [StringLength(20)]
         public string? CustomerPhone { get; set; }
+
+        // ====== BOOKING INFO ======
+        public DateTime? ScheduledStartTime { get; set; } // ngày + giờ đặt trước
+
+        [StringLength(100)]
+        public string? RequestedVehicleType { get; set; }
+
+        public int? RequestedPassengers { get; set; }
+
+        [StringLength(200)]
+        public string? RequestedCargo { get; set; }
+
+        [StringLength(200)]
+        public string? CustomerEmail { get; set; }
 
         public ICollection<FuelRecord>? FuelRecords { get; set; }
         public ICollection<ExtraExpense>? ExtraExpenses { get; set; }
