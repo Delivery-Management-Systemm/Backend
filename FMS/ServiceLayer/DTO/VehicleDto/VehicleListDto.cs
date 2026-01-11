@@ -7,6 +7,7 @@
 
         public string? VehicleType { get; set; }
         public string? VehicleModel { get; set; }
+        public string? VehicleBrand { get; set; }
 
         public int? ManufacturedYear { get; set; }
         public int? CurrentKm { get; set; }

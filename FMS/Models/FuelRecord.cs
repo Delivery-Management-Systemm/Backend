@@ -32,7 +32,7 @@ namespace FMS.Models
 
         public double CurrentKm { get; set; }      // Km tại thời điểm đổ
 
-        [StringLength(20)]
-        public string FuelType { get; set; }       // Diesel, Petrol, Electric
+        
+        
     }
 }

@@ -11,6 +11,7 @@
         public string Type { get; set; }        // Map từ VehicleType
         public int Year { get; set; }           // Map từ ManufacturedYear
         public int? Mileage { get; set; }       // Map từ CurrentKm
+        public string Capacity { get; set; }    // Ví dụ: "2.5 tons" (bạn có thể thêm trường này nếu cần)
 
         // Thông tin tài xế (Khớp với assignedDriver)
         public string? AssignedDriverId { get; set; }
