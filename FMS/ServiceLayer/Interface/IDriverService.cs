@@ -6,5 +6,7 @@ namespace FMS.ServiceLayer.Interface
     {
         Task<List<DriverListDto>> GetDriversAsync();
         Task<List<DriverHistoryDto>> GetDriverHistoryAsync(int driverId);
+        Task<DriverDetailsDto> GetDriverDetailsAsync(int driverId);
+        Task<DriverDetailsDto> CreateDriverAsync(CreateDriverDto dto);
     }
 }

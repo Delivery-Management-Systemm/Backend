@@ -1,4 +1,5 @@
-﻿using FMS.ServiceLayer.Implementation;
+﻿using FMS.ServiceLayer.DTO.DriverDto;
+using FMS.ServiceLayer.Implementation;
 using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,6 +32,20 @@ namespace FMS.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+        [HttpGet("{driverId}")]
+        public async Task<IActionResult> GetDriverDetails(int driverId)
+        {
+            try
+            {
+                var driverDetails = await _driverService.GetDriverDetailsAsync(driverId);
+                return Ok(driverDetails);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
         [HttpGet("{driverId}/history")]
         public async Task<IActionResult> GetDriverHistory(int driverId)
         {
@@ -43,6 +58,12 @@ namespace FMS.Controllers
             {
                 return StatusCode(500, new { error = ex.Message });
             }
+        }
+        [HttpPost]
+        public async Task<IActionResult> CreateDriver([FromBody] CreateDriverDto dto)
+        {
+            var result = await _driverService.CreateDriverAsync(dto);
+            return Ok(result);
         }
     }
 }
