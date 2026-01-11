@@ -9,6 +9,7 @@ namespace FMS.Models
         [Required, StringLength(200)] public string FullName { get; set; }
         [StringLength(20)] public string Phone { get; set; }
         [StringLength(100)] public string Email { get; set; }
+        [StringLength(100)] public string BirthPlace { get; set; }
 
         public int TotalTrips { get; set; }
         public double? Rating { get; set; }
