@@ -8,9 +8,10 @@ namespace FMS.Models
 
         [Required, StringLength(200)] public string FullName { get; set; }
         [StringLength(20)] public string Phone { get; set; }
-        
+        [StringLength(100)] public string Email { get; set; }
+
         public int TotalTrips { get; set; }
-        public double Rating { get; set; }
+        public double? Rating { get; set; }
         public int ExperienceYears { get; set; }
 
         // Active | OnTrip | OnLeave | Suspended

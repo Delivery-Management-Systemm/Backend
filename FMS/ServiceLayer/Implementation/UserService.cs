@@ -56,7 +56,7 @@ namespace FMS.ServiceLayer.Implementation
                     new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.Name, user.FullName),
-                    new Claim(ClaimTypes.Role, user.Role ?? "User")
+                    new Claim(ClaimTypes.Role, user.Role ?? "Manager")
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(expirationMinutes),
                 Issuer = issuer,
