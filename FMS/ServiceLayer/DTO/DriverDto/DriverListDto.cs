@@ -12,7 +12,7 @@
         public string AssignedVehicle { get; set; } = "Chưa gán";
 
         public int TotalTrips { get; set; }
-        public double Rating { get; set; }
+        public double? Rating { get; set; }
 
         public string Status { get; set; } = "Active";
     }

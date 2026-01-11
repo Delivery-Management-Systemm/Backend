@@ -1,4 +1,5 @@
-﻿using FMS.ServiceLayer.Interface;
+﻿using FMS.ServiceLayer.DTO.VehicleDto;
+using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -40,6 +41,19 @@ namespace FMS.Controllers
                     return NotFound(new { message = "Vehicle not found" });
                 }
                 return Ok(vehicleDetails);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+        [HttpPost]
+        public async Task<IActionResult> CreateVehicle([FromBody] VehicleCreateDto dto)
+        {
+            try
+            {
+                var createdVehicle = await _vehicleService.CreateVehicleAsync(dto);
+                return CreatedAtAction(nameof(GetVehicleDetails), new { vehicleId = createdVehicle.VehicleID }, createdVehicle);
             }
             catch (Exception ex)
             {
