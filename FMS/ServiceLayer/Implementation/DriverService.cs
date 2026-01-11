@@ -1,4 +1,5 @@
 ﻿using FMS.DAL.Interfaces;
+using FMS.Models;
 using FMS.ServiceLayer.DTO.DriverDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -72,6 +73,108 @@ namespace FMS.ServiceLayer.Implementation
                     .OrderByDescending(x => x.TripDate)
                     .ToListAsync();
             return history;
+        }
+
+        public async Task<DriverDetailsDto> GetDriverDetailsAsync(int driverId)
+        {
+            if (driverId == null)
+                throw new ArgumentException("Driver id not found");
+            var createdDriver = await _unitOfWork.Drivers
+                .Query()
+                .Include(d => d.DriverLicenses)
+                    .ThenInclude(dl => dl.LicenseClass)
+                .FirstAsync(d => d.DriverID == driverId);
+
+            // ===== MAP RESPONSE =====
+            return new DriverDetailsDto
+            {
+                DriverID = createdDriver.DriverID,
+                FullName = createdDriver.FullName,
+                Phone = createdDriver.Phone,
+                Email = createdDriver.Email,
+                BirthPlace = createdDriver.BirthPlace,
+                ExperienceYears = createdDriver.ExperienceYears,
+                TotalTrips = createdDriver.TotalTrips,
+                Rating = createdDriver.Rating,
+                DriverStatus = createdDriver.DriverStatus,
+
+                Licenses = createdDriver.DriverLicenses.Select(dl => new DriverLicenseDto
+                {
+                    LicenseClassID = dl.LicenseClassID,
+                    LicenseClassName = dl.LicenseClass.Code,
+                    ExpiryDate = dl.ExpiryDate
+                }).ToList()
+            };
+        }
+
+
+        public async Task<DriverDetailsDto> CreateDriverAsync(CreateDriverDto dto)
+        {
+            // ===== VALIDATION =====
+            if (string.IsNullOrWhiteSpace(dto.FullName))
+                throw new Exception("Driver full name is required");
+
+            if (dto.ExperienceYears < 0)
+                throw new Exception("Experience years cannot be negative");
+
+            if (dto.Licenses == null || !dto.Licenses.Any())
+                throw new Exception("Driver must have at least one license");
+
+            // ===== CREATE DRIVER =====
+            var driver = new Driver
+            {
+                FullName = dto.FullName,
+                Phone = dto.Phone,
+                Email = dto.Email,
+                BirthPlace = dto.BirthPlace,
+                ExperienceYears = dto.ExperienceYears,
+
+                TotalTrips = 0,
+                Rating = null,
+                DriverStatus = "Sẵn sàng"
+            };
+
+            await _unitOfWork.Drivers.AddAsync(driver);
+            await _unitOfWork.SaveChangesAsync(); // lấy DriverID
+
+            // ===== CREATE LICENSES =====
+            var licenses = dto.Licenses.Select(l => new DriverLicense
+            {
+                DriverID = driver.DriverID,
+                LicenseClassID = l.LicenseClassID,
+                ExpiryDate = l.ExpiryDate
+            }).ToList();
+
+            await _unitOfWork.DriverLicenses.AddRangeAsync(licenses);
+            await _unitOfWork.SaveChangesAsync();
+
+            // ===== LOAD FULL DATA =====
+            var createdDriver = await _unitOfWork.Drivers
+                .Query()
+                .Include(d => d.DriverLicenses)
+                    .ThenInclude(dl => dl.LicenseClass)
+                .FirstAsync(d => d.DriverID == driver.DriverID);
+
+            // ===== MAP RESPONSE =====
+            return new DriverDetailsDto
+            {
+                DriverID = createdDriver.DriverID,
+                FullName = createdDriver.FullName,
+                Phone = createdDriver.Phone,
+                Email = createdDriver.Email,
+                BirthPlace = createdDriver.BirthPlace,
+                ExperienceYears = createdDriver.ExperienceYears,
+                TotalTrips = createdDriver.TotalTrips,
+                Rating = createdDriver.Rating,
+                DriverStatus = createdDriver.DriverStatus,
+
+                Licenses = createdDriver.DriverLicenses.Select(dl => new DriverLicenseDto
+                {
+                    LicenseClassID = dl.LicenseClassID,
+                    LicenseClassName = dl.LicenseClass.Code,
+                    ExpiryDate = dl.ExpiryDate
+                }).ToList()
+            };
         }
     }
 
