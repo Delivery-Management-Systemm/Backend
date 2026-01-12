@@ -12,7 +12,7 @@ public class ExtraExpense
     public Trip Trip { get; set; }
 
     [Required, StringLength(50)]
-    public string ExpenseType { get; set; }
+    public string ExpenseType { get; set; } // fuel | toll | ferry | parking | repair | fine | other
 
     public decimal Amount { get; set; }
     public DateTime ExpenseDate { get; set; }

@@ -20,6 +20,8 @@ namespace FMS.Models
         // ====== THỜI GIAN ======
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }   // null nếu chưa xong
+        public int? EstimatedDurationMin { get; set; }
+        public int? ActualDurationMin { get; set; }
 
         // ====== LỘ TRÌNH ======
         [Required, StringLength(255)]
@@ -28,7 +30,10 @@ namespace FMS.Models
         [Required, StringLength(255)]
         public string EndLocation { get; set; }
 
+        public string? RouteGeometryJson { get; set; } // GeoJSON
+
         // ====== THỐNG KÊ ======
+        public int? EstimatedDistanceKm { get; set; }
         public int? TotalDistanceKm { get; set; }
         public double? TotalFuelConsumed { get; set; }
 

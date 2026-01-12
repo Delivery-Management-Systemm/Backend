@@ -6,14 +6,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FMS.ServiceLayer.Implementation
 {
-    public class EmergencyReportService: IEmergencyReportService
+    public class EmergencyReportService : IEmergencyReportService
     {
         private readonly IUnitOfWork _unitOfWork;
-      
+
         public EmergencyReportService(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
-           
+
         }
         public async Task<List<EmergencyReportListDto>> GetAllAsync()
         {
@@ -49,6 +49,216 @@ namespace FMS.ServiceLayer.Implementation
                 })
                 .ToListAsync();
             return emergencyReports;
+        }
+
+        public async Task<EmergencyReportListDto> CreateEmergencyReportAsync(CreateEmergencyReportDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Title))
+                throw new Exception("Emergency title is required");
+
+            if (string.IsNullOrWhiteSpace(dto.Level))
+                throw new Exception("Emergency level is required");
+
+            if (string.IsNullOrWhiteSpace(dto.Location))
+                throw new Exception("Location is required");
+
+            if (string.IsNullOrWhiteSpace(dto.ContactPhone))
+                throw new Exception("Contact phone is required");
+
+            Trip? activeTrip = null;
+            Driver? activeDriver = null;
+
+            // ===============================
+            // 1️⃣ AUTO-BIND TRIP BY VEHICLE
+            // ===============================
+            if (dto.VehicleID.HasValue)
+            {
+                activeTrip = await _unitOfWork.Trips
+                    .Query()
+                    .Include(t => t.TripDrivers)
+                        .ThenInclude(td => td.Driver)
+                    .FirstOrDefaultAsync(t =>
+                        t.VehicleID == dto.VehicleID.Value &&
+                        t.TripStatus == "In Progress");
+            }
+
+            // ===============================
+            // 2️⃣ AUTO-BIND DRIVER
+            // ===============================
+            if (activeTrip != null)
+            {
+                // ưu tiên driver đang chạy trip
+                activeDriver = activeTrip.TripDrivers?
+                    .Select(td => td.Driver)
+                    .FirstOrDefault();
+            }
+            else if (dto.DriverID.HasValue)
+            {
+                activeDriver = await _unitOfWork.Drivers
+                    .GetByIdAsync(dto.DriverID.Value);
+            }
+
+
+
+            var report = new EmergencyReport
+            {
+                TripID = activeTrip?.TripID,
+                VehicleID = dto.VehicleID ?? 0,
+                DriverID = activeDriver?.DriverID,
+
+                Title = dto.Title,
+                Description = dto.Description,
+                Level = dto.Level,
+
+                Status = "new",
+                Location = dto.Location,
+                ContactPhone = dto.ContactPhone,
+
+                ReportedAt = DateTime.UtcNow
+            };
+
+
+            await _unitOfWork.EmergencyReports.AddAsync(report);
+            await _unitOfWork.SaveChangesAsync();
+
+            return new EmergencyReportListDto
+            {
+                Id = report.EmergencyID,
+                Title = report.Title,
+                Level = report.Level,
+                Status = report.Status,
+
+                Desc = report.Description,
+                Location = report.Location,
+                Contact = report.ContactPhone,
+
+                Reporter = activeDriver != null ? activeDriver.FullName : "Không xác định",
+                Driver = activeDriver != null ? activeDriver.FullName : "-",
+
+                Vehicle = report.Vehicle != null
+                    ? report.Vehicle.LicensePlate + " - " + report.Vehicle.VehicleType
+                    : "-",
+
+                ReportedAt = report.ReportedAt.ToString("HH:mm:ss dd/MM/yyyy"),
+                RespondedAt = report.RespondedAt != null
+                        ? report.RespondedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
+                        : null,
+                ResolvedAt = report.ResolvedAt != null
+                        ? report.ResolvedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
+                        : null
+            };
+        }
+        public async Task<EmergencyReportListDto> RespondEmergencyReportAsync(RespondEmergencyReportDto dto)
+        {
+            var report = await _unitOfWork.EmergencyReports
+                .Query()
+                .Include(e => e.Vehicle)
+                .Include(e => e.Driver)
+                .FirstOrDefaultAsync(e => e.EmergencyID == dto.EmergencyID);
+
+            if (report == null)
+                throw new Exception("Emergency report not found");
+
+            if (report.Status == "resolved")
+                throw new Exception("Emergency report already resolved");
+
+            if (report.Status == "processing")
+                throw new Exception("Emergency report is already being processed");
+
+            report.Status = "processing";
+            report.RespondedAt = DateTime.UtcNow;
+            report.RespondedByUserID = dto.RespondedByUserID;
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return new EmergencyReportListDto
+            {
+                Id = report.EmergencyID,
+                Title = report.Title,
+                Level = report.Level,
+                Status = report.Status,
+
+                Desc = report.Description,
+                Location = report.Location,
+                Contact = report.ContactPhone,
+
+                Reporter = report.Driver != null ? report.Driver.FullName : "Không xác định",
+                Driver = report.Driver != null ? report.Driver.FullName : "-",
+
+                Vehicle = report.Vehicle != null
+                    ? report.Vehicle.LicensePlate + " - " + report.Vehicle.VehicleType
+                    : "-",
+
+                ReportedAt = report.ReportedAt.ToString("HH:mm:ss dd/MM/yyyy"),
+                RespondedAt = report.RespondedAt != null
+                        ? report.RespondedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
+                        : null,
+                ResolvedAt = report.ResolvedAt != null
+                        ? report.ResolvedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
+                        : null
+            };
+        }
+
+        public async Task<EmergencyReportListDto> ResolveEmergencyReportAsync(ResolveEmergencyReportDto dto)
+        {
+            var report = await _unitOfWork.EmergencyReports
+                .Query()
+                .Include(e => e.Vehicle)
+                .Include(e => e.Driver)
+                .FirstOrDefaultAsync(e => e.EmergencyID == dto.EmergencyID);
+
+            if (report == null)
+                throw new Exception("Emergency report not found");
+
+            if (report.Status != "processing")
+                throw new Exception("Only processing emergency can be resolved");
+
+            report.Status = "resolved";
+            report.ResolvedAt = DateTime.UtcNow;
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return new EmergencyReportListDto
+            {
+                Id = report.EmergencyID,
+                Title = report.Title,
+                Level = report.Level,
+                Status = report.Status,
+
+                Desc = report.Description,
+                Location = report.Location,
+                Contact = report.ContactPhone,
+
+                Reporter = report.Driver != null ? report.Driver.FullName : "Không xác định",
+                Driver = report.Driver != null ? report.Driver.FullName : "-",
+
+                Vehicle = report.Vehicle != null
+                    ? report.Vehicle.LicensePlate + " - " + report.Vehicle.VehicleType
+                    : "-",
+
+                ReportedAt = report.ReportedAt.ToString("HH:mm:ss dd/MM/yyyy"),
+                RespondedAt = report.RespondedAt != null
+                        ? report.RespondedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
+                        : null,
+                ResolvedAt = report.ResolvedAt != null
+                        ? report.ResolvedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
+                        : null
+            };
+        }
+        public async Task<EmergencyReportStatsDto> GetEmergencyReportStatsAsync()
+        {
+            var criticalReports = await _unitOfWork.EmergencyReports.Query().CountAsync(e => e.Level == "critical");
+            var newReports = await _unitOfWork.EmergencyReports.Query().CountAsync(e => e.Status == "new");
+            var processingReports = await _unitOfWork.EmergencyReports.Query().CountAsync(e => e.Status == "processing");
+            var resolvedReports = await _unitOfWork.EmergencyReports.Query().CountAsync(e => e.Status == "resolved");
+            return new EmergencyReportStatsDto
+            {
+                newReports = newReports,
+                processing = processingReports,
+                resolved = resolvedReports,
+                critical = criticalReports
+            };
+
         }
     }
 }
