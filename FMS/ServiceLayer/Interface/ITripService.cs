@@ -6,7 +6,7 @@ namespace FMS.ServiceLayer.Interface
     {
         Task<List<TripListDto>> GetTripsAsync();
         Task<TripStatsDto> GetTripStatsAsync();
-        Task<List<OrderListDto>> GetOrdersAsync();
+        Task<OrderListDto> GetOrdersByIdAsync(int tripId);
         Task<List<BookedTripListDto>> GetBookedTripListAsync();
         Task<BookedTripStatsDto> GetBookedTripStatsAsync();
 

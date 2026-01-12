@@ -1,4 +1,5 @@
 ﻿using FMS.DAL.Interfaces;
+using FMS.Models;
 using FMS.ServiceLayer.DTO.TripDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -83,32 +84,34 @@ namespace FMS.ServiceLayer.Implementation
             };
         }
 
-        public async Task<List<OrderListDto>> GetOrdersAsync()
+        public async Task<OrderListDto> GetOrdersByIdAsync(int tripId)
         {
-            var trips = await _unitOfWork.Trips.Query()
+            if (tripId == null)
+                throw new ArgumentException("Trip id not found");
+            var trip = await _unitOfWork.Trips.Query()
                                         .Include(t => t.Vehicle)
                                         .Include(t => t.TripDrivers)
                                             .ThenInclude(td => td.Driver)
                                         .Include(t => t.TripSteps)
                                         .Include(t => t.ExtraExpenses)
-                                        .ToListAsync();
+                                        .FirstAsync(d => d.TripID == tripId);
 
-            var result = trips.Select(t => new OrderListDto
+            return new OrderListDto
             {
-                Id = t.TripID,
-                Customer = t.CustomerName,
-                Contact = t.CustomerPhone,
-                Pickup = t.StartLocation,
-                Dropoff = t.EndLocation,
-                Vehicle = t.Vehicle.LicensePlate,
-                Driver = t.TripDrivers
+                Id = trip.TripID,
+                Customer = trip.CustomerName,
+                Contact = trip.CustomerPhone,
+                Pickup = trip.StartLocation,
+                Dropoff = trip.EndLocation,
+                Vehicle = trip.Vehicle.LicensePlate,
+                Driver = trip.TripDrivers
                             .OrderByDescending(td => td.AssignedFrom)
                             .Select(td => td.Driver.FullName)
                             .FirstOrDefault(),
 
-                Status = t.TripStatus,
+                Status = trip.TripStatus,
 
-                Steps = t.TripSteps
+                Steps = trip.TripSteps
                     .OrderBy(s => s.TripStepID)
                     .Select(s => new TripStepDto
                     {
@@ -120,10 +123,11 @@ namespace FMS.ServiceLayer.Implementation
                             : null
                     }).ToList(),
 
-                Cost = $"{t.ExtraExpenses.Sum(e => e.Amount):N0}đ"
-            }).ToList();
-            return result;
+                Cost = $"{trip.ExtraExpenses.Sum(e => e.Amount):N0}đ"
+            };
+         
         }
+
         public async Task<List<BookedTripListDto>> GetBookedTripListAsync()
         {
             var bookedTrips = await _unitOfWork.Trips.Query()
