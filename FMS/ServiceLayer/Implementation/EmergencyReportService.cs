@@ -110,7 +110,7 @@ namespace FMS.ServiceLayer.Implementation
                 Description = dto.Description,
                 Level = dto.Level,
 
-                Status = "new",
+                Status = "processing",
                 Location = dto.Location,
                 ContactPhone = dto.ContactPhone,
 
@@ -162,58 +162,9 @@ namespace FMS.ServiceLayer.Implementation
             if (report.Status == "resolved")
                 throw new Exception("Emergency report already resolved");
 
-            if (report.Status == "processing")
-                throw new Exception("Emergency report is already being processed");
-
-            report.Status = "processing";
+            report.Status = "resolved";
             report.RespondedAt = DateTime.UtcNow;
             report.RespondedByUserID = dto.RespondedByUserID;
-
-            await _unitOfWork.SaveChangesAsync();
-
-            return new EmergencyReportListDto
-            {
-                Id = report.EmergencyID,
-                Title = report.Title,
-                Level = report.Level,
-                Status = report.Status,
-
-                Desc = report.Description,
-                Location = report.Location,
-                Contact = report.ContactPhone,
-
-                Reporter = report.Driver != null ? report.Driver.FullName : "Không xác định",
-                Driver = report.Driver != null ? report.Driver.FullName : "-",
-
-                Vehicle = report.Vehicle != null
-                    ? report.Vehicle.LicensePlate + " - " + report.Vehicle.VehicleType
-                    : "-",
-
-                ReportedAt = report.ReportedAt.ToString("HH:mm:ss dd/MM/yyyy"),
-                RespondedAt = report.RespondedAt != null
-                        ? report.RespondedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
-                        : null,
-                ResolvedAt = report.ResolvedAt != null
-                        ? report.ResolvedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
-                        : null
-            };
-        }
-
-        public async Task<EmergencyReportListDto> ResolveEmergencyReportAsync(ResolveEmergencyReportDto dto)
-        {
-            var report = await _unitOfWork.EmergencyReports
-                .Query()
-                .Include(e => e.Vehicle)
-                .Include(e => e.Driver)
-                .FirstOrDefaultAsync(e => e.EmergencyID == dto.EmergencyID);
-
-            if (report == null)
-                throw new Exception("Emergency report not found");
-
-            if (report.Status != "processing")
-                throw new Exception("Only processing emergency can be resolved");
-
-            report.Status = "resolved";
             report.ResolvedAt = DateTime.UtcNow;
 
             await _unitOfWork.SaveChangesAsync();
@@ -245,6 +196,8 @@ namespace FMS.ServiceLayer.Implementation
                         : null
             };
         }
+
+      
         public async Task<EmergencyReportStatsDto> GetEmergencyReportStatsAsync()
         {
             var criticalReports = await _unitOfWork.EmergencyReports.Query().CountAsync(e => e.Level == "critical");
