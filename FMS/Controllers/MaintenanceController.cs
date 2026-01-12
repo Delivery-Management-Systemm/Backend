@@ -1,4 +1,5 @@
-﻿using FMS.ServiceLayer.Interface;
+﻿using FMS.ServiceLayer.DTO.MaintenanceDto;
+using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -25,6 +26,12 @@ namespace FMS.Controllers
         {
             var invoices = await _maintenanceService.GetAllInvoiceAsync();
             return Ok(invoices);
+        }
+        [HttpPost]
+        public async Task<IActionResult> CreateMaintenance([FromBody] CreateMaintenanceDto dto)
+        {
+            var maintenanceId = await _maintenanceService.CreateMaintenanceAsync(dto);
+            return CreatedAtAction(nameof(GetAllInvoices), new { id = maintenanceId }, new { Id = maintenanceId });
         }
     }
 }

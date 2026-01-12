@@ -8,6 +8,11 @@ namespace FMS.Models
         [Key] public int MaintenanceID { get; set; }
         [ForeignKey("Vehicle")] public int VehicleID { get; set; }
         public Vehicle Vehicle { get; set; }
+
+        public string MaintenanceType { get; set; } 
+        public string Notes { get; set; }
+        public DateTime? NextMaintenanceDate { get; set; }
+        public int? NextMaintenanceKm { get; set; }
         public DateTime ScheduledDate { get; set; }
         public DateTime? FinishedDate { get; set; }
         [StringLength(200)]

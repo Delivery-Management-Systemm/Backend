@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FMS.ServiceLayer.Implementation
 {
-    public class DriverService: IDriverService
+    public class DriverService : IDriverService
     {
         private readonly IUnitOfWork _unitOfWork;
         public DriverService(IUnitOfWork unitOfWork)
@@ -176,6 +176,30 @@ namespace FMS.ServiceLayer.Implementation
                 }).ToList()
             };
         }
-    }
 
+        public async Task UpdateDriverRatingAsync(int driverId)
+        {
+            var driver = await _unitOfWork.Drivers.Query()
+                .Include(d => d.TripDrivers)
+                .ThenInclude(td => td.Trip)
+                .FirstOrDefaultAsync(d => d.DriverID == driverId);
+            if (driver == null)
+                throw new Exception("Driver not found");
+
+            var completedTrips = driver.TripDrivers
+                .Where(td => td.Trip.TripStatus == "Completed" && td.TripRating.HasValue)
+                .ToList();
+
+            if (completedTrips.Count == 0)
+            {
+                driver.Rating = null;
+            }
+            else
+            {
+                driver.Rating = completedTrips.Average(td => td.TripRating.Value);
+            }
+            _unitOfWork.Drivers.Update(driver);
+            await _unitOfWork.SaveChangesAsync();
+        }
+    }
 }

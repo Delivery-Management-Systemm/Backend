@@ -12,6 +12,7 @@
         public string Technician { get; set; } // TechnicianName
         public double TotalAmount { get; set; } // TotalCost
         public string? Notes { get; set; }
+        public string Status { get; set; }
 
         public List<MaintenanceServiceItemDto> Services { get; set; } = new();
     }
