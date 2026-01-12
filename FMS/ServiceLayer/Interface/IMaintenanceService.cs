@@ -7,5 +7,6 @@ namespace FMS.ServiceLayer.Interface
     {
         Task<List<ServiceDto>> GetAllServiceAsync();
         Task<List<MaintenanceListDto>> GetAllInvoiceAsync();
+        Task<int> CreateMaintenanceAsync(CreateMaintenanceDto dto);
     }
 }
