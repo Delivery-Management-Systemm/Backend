@@ -7,7 +7,7 @@ namespace FMS.ServiceLayer.Interface
         Task<List<EmergencyReportListDto>> GetAllAsync();
         Task<EmergencyReportListDto> CreateEmergencyReportAsync(CreateEmergencyReportDto dto);
         Task<EmergencyReportListDto> RespondEmergencyReportAsync(RespondEmergencyReportDto dto);
-        Task<EmergencyReportListDto> ResolveEmergencyReportAsync(ResolveEmergencyReportDto dto);
+     
         Task<EmergencyReportStatsDto> GetEmergencyReportStatsAsync();
     }
 }

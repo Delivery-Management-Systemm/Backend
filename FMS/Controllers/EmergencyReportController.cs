@@ -34,13 +34,7 @@ namespace FMS.Controllers
             var respondedReport = await _emergencyReportService.RespondEmergencyReportAsync(dto);
             return Ok(respondedReport);
         }
-        [HttpPut]
-        [Route("resolve")]
-        public async Task<IActionResult> ResolveEmergencyReport([FromBody] ResolveEmergencyReportDto dto)
-        {
-            var resolvedReport = await _emergencyReportService.ResolveEmergencyReportAsync(dto);
-            return Ok(resolvedReport);
-        }
+        
         [HttpGet]
         [Route("stats")]
         public async Task<IActionResult> GetEmergencyReportStats()
