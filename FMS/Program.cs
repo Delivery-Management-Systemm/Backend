@@ -61,7 +61,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddRateLimiter(options => {
     options.AddFixedWindowLimiter("fixed", limiterOptions => {
-    limiterOptions.PermitLimit = 30; // số request cho phép
+    limiterOptions.PermitLimit = 10; // số request cho phép
     limiterOptions.Window = TimeSpan.FromSeconds(60); // trong 10 giây
     limiterOptions.QueueLimit = 0; 
     });
