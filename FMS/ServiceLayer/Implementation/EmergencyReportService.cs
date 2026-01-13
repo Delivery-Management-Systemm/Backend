@@ -1,8 +1,10 @@
 ﻿using FMS.DAL.Interfaces;
 using FMS.Models;
+using FMS.Pagination;
 using FMS.ServiceLayer.DTO.EmergencyReportDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace FMS.ServiceLayer.Implementation
 {
@@ -15,40 +17,45 @@ namespace FMS.ServiceLayer.Implementation
             _unitOfWork = unitOfWork;
 
         }
-        public async Task<List<EmergencyReportListDto>> GetAllAsync()
+        public async Task<PaginatedResult<EmergencyReportListDto>> GetAllAsync(EmergencyReportParams @params)
         {
-            var emergencyReports = await _unitOfWork.EmergencyReports.Query()
+            var query = _unitOfWork.EmergencyReports.Query()
                 .Include(e => e.Vehicle)
                 .Include(e => e.Driver)
-                .OrderByDescending(e => e.ReportedAt)
-                .Select(e => new EmergencyReportListDto
+                .AsNoTracking(); // Tăng hiệu năng cho query chỉ đọc
+
+            // 1. Xử lý Dynamic Sorting
+            if (!string.IsNullOrEmpty(@params.SortBy))
+            {
+                query = @params.SortBy.ToLower() switch
                 {
-                    Id = e.EmergencyID,
-                    Title = e.Title,
-                    Level = e.Level,
-                    Status = e.Status,
+                    "level" => @params.IsDescending ? query.OrderByDescending(e => e.Level) : query.OrderBy(e => e.Level),
+                    "status" => @params.IsDescending ? query.OrderByDescending(e => e.Status) : query.OrderBy(e => e.Status),
+                    // Mặc định sort theo ReportedAt như code cũ của bạn
+                    _ => @params.IsDescending ? query.OrderByDescending(e => e.ReportedAt) : query.OrderBy(e => e.ReportedAt)
+                };
+            }
 
-                    Desc = e.Description,
-                    Location = e.Location,
-                    Contact = e.ContactPhone,
+            // 2. Map sang DTO (Lưu ý: chưa ToList ở đây để query vẫn là IQueryable)
+            var dtoQuery = query.Select(e => new EmergencyReportListDto
+            {
+                Id = e.EmergencyID,
+                Title = e.Title,
+                Level = e.Level,
+                Status = e.Status,
+                Desc = e.Description,
+                Location = e.Location,
+                Contact = e.ContactPhone,
+                Reporter = e.Driver != null ? e.Driver.FullName : "Không xác định",
+                Driver = e.Driver != null ? e.Driver.FullName : "-",
+                Vehicle = e.Vehicle != null ? e.Vehicle.LicensePlate + " - " + e.Vehicle.VehicleType : "-",
+                ReportedAt = e.ReportedAt.ToString("HH:mm:ss dd/MM/yyyy"),
+                RespondedAt = e.RespondedAt == null ? null : e.RespondedAt.Value.ToString("HH:mm:ss dd/MM/yyyy"),
+                ResolvedAt = e.ResolvedAt == null ? null : e.ResolvedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
+            });
 
-                    Reporter = e.Driver != null ? e.Driver.FullName : "Không xác định",
-                    Driver = e.Driver != null ? e.Driver.FullName : "-",
-
-                    Vehicle = e.Vehicle != null
-                        ? e.Vehicle.LicensePlate + " - " + e.Vehicle.VehicleType
-                        : "-",
-
-                    ReportedAt = e.ReportedAt.ToString("HH:mm:ss dd/MM/yyyy"),
-                    RespondedAt = e.RespondedAt != null
-                        ? e.RespondedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
-                        : null,
-                    ResolvedAt = e.ResolvedAt != null
-                        ? e.ResolvedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
-                        : null
-                })
-                .ToListAsync();
-            return emergencyReports;
+            // 3. Gọi phân trang tại đây (sử dụng Extension Method)
+            return await dtoQuery.paginate(@params.PageSize, @params.PageNumber);
         }
 
         public async Task<EmergencyReportListDto> CreateEmergencyReportAsync(CreateEmergencyReportDto dto)
@@ -201,12 +208,12 @@ namespace FMS.ServiceLayer.Implementation
         public async Task<EmergencyReportStatsDto> GetEmergencyReportStatsAsync()
         {
             var criticalReports = await _unitOfWork.EmergencyReports.Query().CountAsync(e => e.Level == "critical");
-            var newReports = await _unitOfWork.EmergencyReports.Query().CountAsync(e => e.Status == "new");
+            var totalReports = await _unitOfWork.EmergencyReports.Query().CountAsync();
             var processingReports = await _unitOfWork.EmergencyReports.Query().CountAsync(e => e.Status == "processing");
             var resolvedReports = await _unitOfWork.EmergencyReports.Query().CountAsync(e => e.Status == "resolved");
             return new EmergencyReportStatsDto
             {
-                newReports = newReports,
+                total = totalReports,
                 processing = processingReports,
                 resolved = resolvedReports,
                 critical = criticalReports

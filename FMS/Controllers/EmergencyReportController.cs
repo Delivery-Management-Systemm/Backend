@@ -1,4 +1,5 @@
-﻿using FMS.ServiceLayer.DTO.EmergencyReportDto;
+﻿using FMS.Pagination;
+using FMS.ServiceLayer.DTO.EmergencyReportDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -16,9 +17,9 @@ namespace FMS.Controllers
             _emergencyReportService = emergencyReportService;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAllEmergencyReports()
+        public async Task<IActionResult> GetAllEmergencyReports([FromQuery] EmergencyReportParams @params)
         {
-            var reports = await _emergencyReportService.GetAllAsync();
+            var reports = await _emergencyReportService.GetAllAsync(@params);
             return Ok(reports);
         }
         [HttpPost]

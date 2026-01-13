@@ -1,5 +1,6 @@
 ﻿using FMS.DAL.Interfaces;
 using FMS.Models;
+using FMS.Pagination;
 using FMS.ServiceLayer.DTO.MaintenanceDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -26,28 +27,41 @@ namespace FMS.ServiceLayer.Implementation
             return services;
         }
 
-        public async Task<List<MaintenanceListDto>> GetAllInvoiceAsync()
+        public async Task<PaginatedResult<MaintenanceListDto>> GetAllInvoiceAsync(MaintenanceParams @params)
         {
-            var data = await _unitOfWork.Maintenances.Query()
+            var query = _unitOfWork.Maintenances.Query()
                 .Include(m => m.Vehicle)
                 .Include(m => m.MaintenanceServices)
                     .ThenInclude(ms => ms.Service)
-                .OrderByDescending(m => m.ScheduledDate)
-                .ToListAsync();
+                .AsNoTracking();
 
-            return data.Select(m => new MaintenanceListDto
+            // 1. Xử lý Dynamic Sorting
+            if (!string.IsNullOrEmpty(@params.SortBy))
+            {
+                query = @params.SortBy.ToLower() switch
+                {
+                    "maintenancestatus" => @params.IsDescending ? query.OrderByDescending(e => e.MaintenanceStatus) : query.OrderBy(e => e.MaintenanceStatus),
+                    "totalcost" => @params.IsDescending ? query.OrderByDescending(e => e.TotalCost) : query.OrderBy(e => e.TotalCost),
+                    "date" => @params.IsDescending ? query.OrderByDescending(e => e.ScheduledDate) : query.OrderBy(e => e.ScheduledDate),
+                    // Mặc định sort theo ReportedAt như code cũ của bạn
+                    _ => @params.IsDescending ? query.OrderByDescending(e => e.MaintenanceType) : query.OrderBy(e => e.MaintenanceType)
+                };
+            }
+            var dtoQuery = query.Select(m => new MaintenanceListDto
             {
                 Id = m.MaintenanceID.ToString(),
-                InvoiceNumber = $"HD-BT-{m.MaintenanceID:D4}",
+                // EF Core hỗ trợ string interpolation trong Select để dịch sang SQL
+                InvoiceNumber = "HD-BT-" + m.MaintenanceID.ToString().PadLeft(4, '0'),
                 VehicleId = m.VehicleID.ToString(),
-                PlateNumber = m.Vehicle?.LicensePlate ?? "N/A",
+                PlateNumber = m.Vehicle != null ? m.Vehicle.LicensePlate : "N/A",
                 Date = m.ScheduledDate,
-                Type = m.MaintenanceType, // Hoặc lấy từ Service đầu tiên
+                Type = m.MaintenanceType,
                 Workshop = m.GarageName,
                 Technician = m.TechnicianName,
                 TotalAmount = m.TotalCost,
                 Notes = m.Notes,
                 Status = m.MaintenanceStatus ?? "Unknown",
+                // Map List con (Nested Collection)
                 Services = m.MaintenanceServices.Select(ms => new MaintenanceServiceItemDto
                 {
                     ServiceName = ms.Service.ServiceName,
@@ -55,7 +69,11 @@ namespace FMS.ServiceLayer.Implementation
                     Price = ms.UnitPrice,
                     Total = ms.TotalPrice
                 }).ToList()
-            }).ToList();
+            });
+
+            // 4. Gọi hàm paginate thần thánh của bạn
+            // Kết quả trả về sẽ bao gồm total, limit, page và list objects
+            return await dtoQuery.paginate(@params.PageSize, @params.PageNumber);
         }
 
         public async Task<int> CreateMaintenanceAsync(CreateMaintenanceDto dto)
