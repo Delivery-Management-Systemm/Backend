@@ -35,6 +35,7 @@ namespace FMS.Controllers
             return Ok(invoices);
         }
         [HttpPost]
+        [EnableRateLimiting("fixed")]
         public async Task<IActionResult> CreateMaintenance([FromBody] CreateMaintenanceDto dto)
         {
             var maintenanceId = await _maintenanceService.CreateMaintenanceAsync(dto);

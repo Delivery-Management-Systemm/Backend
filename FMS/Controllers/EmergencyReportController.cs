@@ -23,6 +23,7 @@ namespace FMS.Controllers
             return Ok(reports);
         }
         [HttpPost]
+        [EnableRateLimiting("fixed")]
         public async Task<IActionResult> CreateEmergencyReport([FromBody] CreateEmergencyReportDto dto)
         {
             var createdReport = await _emergencyReportService.CreateEmergencyReportAsync(dto);
@@ -30,6 +31,7 @@ namespace FMS.Controllers
         }
         [HttpPut]
         [Route("respond")]
+        [EnableRateLimiting("fixed")]
         public async Task<IActionResult> RespondEmergencyReport([FromBody] RespondEmergencyReportDto dto)
         {
             var respondedReport = await _emergencyReportService.RespondEmergencyReportAsync(dto);

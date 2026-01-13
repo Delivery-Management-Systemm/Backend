@@ -7,7 +7,7 @@ namespace FMS.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [EnableRateLimiting("fixed")]
+    
     public class TripController: ControllerBase
     {
         private readonly ITripService _tripService;
