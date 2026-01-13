@@ -1,8 +1,11 @@
 ﻿using FMS.DAL.Interfaces;
 using FMS.Models;
+using FMS.Pagination;
 using FMS.ServiceLayer.DTO.DriverDto;
+using FMS.ServiceLayer.DTO.EmergencyReportDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace FMS.ServiceLayer.Implementation
 {
@@ -14,14 +17,40 @@ namespace FMS.ServiceLayer.Implementation
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<List<DriverListDto>> GetDriversAsync()
+        public async Task<PaginatedResult<DriverListDto>> GetDriversAsync(DriverParams @params)
         {
-            var drivers = await _unitOfWork.Drivers.Query()
+            var query = _unitOfWork.Drivers.Query()
                 .Include(d => d.DriverLicenses).ThenInclude(dl => dl.LicenseClass)
                 .Include(d => d.TripDrivers)
                     .ThenInclude(td => td.Trip)
                     .ThenInclude(t => t.Vehicle)
-                .Select(d => new DriverListDto
+                .AsNoTracking(); // Tăng hiệu năng cho query chỉ đọc
+
+
+            if (!string.IsNullOrEmpty(@params.DriverStatus))
+            {
+                query = query.Where(e => e.DriverStatus == @params.DriverStatus);
+            }
+
+
+
+            // 1. Xử lý Dynamic Sorting
+            if (!string.IsNullOrEmpty(@params.SortBy))
+            {
+                query = @params.SortBy.ToLower() switch
+                {
+                    "experience" => @params.IsDescending ? query.OrderByDescending(e => e.ExperienceYears) : query.OrderBy(e => e.ExperienceYears),
+                    "status" => @params.IsDescending ? query.OrderByDescending(e => e.DriverStatus) : query.OrderBy(e => e.DriverStatus),
+                    "rating" => @params.IsDescending ? query.OrderByDescending(e => e.Rating) : query.OrderBy(e => e.Rating),
+                    _ => @params.IsDescending ? query.OrderByDescending(e => e.FullName) : query.OrderBy(e => e.FullName)
+                };
+            }
+            else
+            {
+                query = query.OrderBy(e => e.FullName);
+            }
+
+            var dtoQuery = query.Select(d => new DriverListDto
                 {
                     DriverID = d.DriverID,
                     Name = d.FullName,
@@ -42,9 +71,8 @@ namespace FMS.ServiceLayer.Implementation
                     TotalTrips = d.TotalTrips,
                     Rating = d.Rating,
                     Status = d.DriverStatus ?? "Active"
-                })
-                .ToListAsync();
-            return drivers;
+                });
+            return await dtoQuery.paginate(@params.PageSize, @params.PageNumber);
 
         }
 

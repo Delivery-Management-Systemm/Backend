@@ -1,11 +1,12 @@
 ﻿using FMS.Models;
+using FMS.Pagination;
 using FMS.ServiceLayer.DTO.UserDto;
 
 namespace FMS.ServiceLayer.Interface
 {
     public interface IUserService
     {
-        Task<IEnumerable<User>> GetAllUsersAsync();
+        Task<PaginatedResult<User>> GetAllUsersAsync(UserParams @params);
         Task<User> GetByIdAsync(int id);
         Task<User> GetByEmailAsync(string email);
         Task<User> RegisterAsync(User user, string password);
