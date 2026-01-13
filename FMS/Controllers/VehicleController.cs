@@ -49,6 +49,7 @@ namespace FMS.Controllers
             }
         }
         [HttpPost]
+        [EnableRateLimiting("fixed")]
         public async Task<IActionResult> CreateVehicle([FromBody] VehicleCreateDto dto)
         {
             try
