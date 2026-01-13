@@ -24,6 +24,19 @@ namespace FMS.ServiceLayer.Implementation
                 .Include(e => e.Driver)
                 .AsNoTracking(); // Tăng hiệu năng cho query chỉ đọc
 
+
+            if (!string.IsNullOrEmpty(@params.Status))
+            {
+                query = query.Where(e => e.Status == @params.Status);
+            }
+
+            // Lọc theo Level (ví dụ: "high")
+            if (!string.IsNullOrEmpty(@params.Level))
+            {
+                query = query.Where(e => e.Level == @params.Level);
+            }
+
+
             // 1. Xử lý Dynamic Sorting
             if (!string.IsNullOrEmpty(@params.SortBy))
             {

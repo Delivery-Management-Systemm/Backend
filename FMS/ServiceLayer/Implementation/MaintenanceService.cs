@@ -35,6 +35,18 @@ namespace FMS.ServiceLayer.Implementation
                     .ThenInclude(ms => ms.Service)
                 .AsNoTracking();
 
+
+            if (!string.IsNullOrEmpty(@params.MaintenanceStatus))
+            {
+                query = query.Where(e => e.MaintenanceStatus == @params.MaintenanceStatus);
+            }
+
+            // Lọc theo Level (ví dụ: "high")
+            if (!string.IsNullOrEmpty(@params.MaintenanceType))
+            {
+                query = query.Where(e => e.MaintenanceType == @params.MaintenanceType);
+            }
+
             // 1. Xử lý Dynamic Sorting
             if (!string.IsNullOrEmpty(@params.SortBy))
             {
