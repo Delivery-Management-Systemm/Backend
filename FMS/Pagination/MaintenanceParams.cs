@@ -6,5 +6,9 @@
         public int PageSize { get; set; } = 10;
         public string? SortBy { get; set; } = "MaintenanceType";
         public bool IsDescending { get; set; } = true;
+
+        //Tieu chi loc
+        public string? MaintenanceType { get; set; }
+        public string? MaintenanceStatus { get; set; }
     }
 }
