@@ -1,5 +1,6 @@
 ﻿using FMS.DAL.Interfaces;
 using FMS.Models;
+using FMS.Pagination;
 using FMS.ServiceLayer.DTO.UserDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -73,9 +74,37 @@ namespace FMS.ServiceLayer.Implementation
         }
 
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        public async Task<PaginatedResult<User>> GetAllUsersAsync(UserParams @params)
         {
-            return await _unitOfWork.Users.Query().ToListAsync();
+            // Khởi tạo query từ UnitOfWork
+            var query = _unitOfWork.Users.Query().AsNoTracking();
+
+            // --- BƯỚC 1: LỌC (FILTERING) ---
+            if (!string.IsNullOrEmpty(@params.Role))
+            {
+                query = query.Where(u => u.Role == @params.Role);
+            }
+
+            // --- BƯỚC 2: SẮP XẾP (SORTING) ---
+            if (!string.IsNullOrEmpty(@params.SortBy))
+            {
+                query = @params.SortBy.ToLower() switch
+                {
+                    "fullname" => @params.IsDescending ? query.OrderByDescending(u => u.FullName) : query.OrderBy(u => u.FullName),
+                    "role" => @params.IsDescending ? query.OrderByDescending(u => u.Role) : query.OrderBy(u => u.Role),
+                    "email" => @params.IsDescending ? query.OrderByDescending(u => u.Email) : query.OrderBy(u => u.Email),
+                    // Mặc định sắp xếp theo FullName hoặc Id
+                    _ => @params.IsDescending ? query.OrderByDescending(u => u.FullName) : query.OrderBy(u => u.FullName)
+                };
+            }
+            else
+            {
+                query = query.OrderBy(u => u.FullName); // Luôn cần OrderBy trước khi Paginate
+            }
+
+            // --- BƯỚC 3: PHÂN TRANG (PAGINATION) ---
+           
+            return await query.paginate(@params.PageSize, @params.PageNumber);
         }
 
         public async Task<User> GetByIdAsync(int id)

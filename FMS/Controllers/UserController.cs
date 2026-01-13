@@ -1,4 +1,5 @@
 ﻿using FMS.Models;
+using FMS.Pagination;
 using FMS.ServiceLayer.DTO.UserDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -25,11 +26,11 @@ namespace FMS.Controllers
         // GET: api/user/all (Admin only)
         [HttpGet("all")]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers([FromQuery] UserParams @params)
         {
             try
             {
-                var users = await _userService.GetAllUsersAsync();
+                var users = await _userService.GetAllUsersAsync(@params);
                 return Ok(users);
             }
             catch (Exception ex)
