@@ -10,7 +10,7 @@ namespace FMS.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [EnableRateLimiting("fixed")]
+    
     public class DriverController: ControllerBase
     {
         private readonly IDriverService _driverService;
@@ -61,6 +61,7 @@ namespace FMS.Controllers
             }
         }
         [HttpPost]
+        [EnableRateLimiting("fixed")]
         public async Task<IActionResult> CreateDriver([FromBody] CreateDriverDto dto)
         {
             var result = await _driverService.CreateDriverAsync(dto);
