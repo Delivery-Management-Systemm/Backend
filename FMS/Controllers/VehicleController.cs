@@ -1,4 +1,5 @@
-﻿using FMS.ServiceLayer.DTO.VehicleDto;
+﻿using FMS.Pagination;
+using FMS.ServiceLayer.DTO.VehicleDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -18,11 +19,11 @@ namespace FMS.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> GetVehicles()
+        public async Task<IActionResult> GetVehicles([FromQuery] VehicleParams @params)
         {
             try
             {
-                var vehicles = await _vehicleService.GetVehiclesAsync();
+                var vehicles = await _vehicleService.GetVehiclesAsync(@params);
                 return Ok(vehicles);
             }
             catch (Exception ex)

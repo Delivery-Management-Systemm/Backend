@@ -1,4 +1,5 @@
-﻿using FMS.ServiceLayer.DTO.DriverDto;
+﻿using FMS.Pagination;
+using FMS.ServiceLayer.DTO.DriverDto;
 using FMS.ServiceLayer.Implementation;
 using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -20,11 +21,11 @@ namespace FMS.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> GetDrivers()
+        public async Task<IActionResult> GetDrivers([FromQuery] DriverParams @params)
         {
             try
             {
-                var drivers = await _driverService.GetDriversAsync();
+                var drivers = await _driverService.GetDriversAsync(@params);
                 return Ok(drivers);
             }
             catch (Exception ex)

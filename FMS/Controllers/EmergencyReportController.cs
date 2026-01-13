@@ -2,11 +2,13 @@
 using FMS.ServiceLayer.DTO.EmergencyReportDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FMS.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    //[EnableRateLimiting("fixed")]
     public class EmergencyReportController: ControllerBase
     {
         private readonly IEmergencyReportService _emergencyReportService;

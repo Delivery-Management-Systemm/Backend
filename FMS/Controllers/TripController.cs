@@ -1,4 +1,5 @@
-﻿using FMS.ServiceLayer.Interface;
+﻿using FMS.Pagination;
+using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -16,9 +17,9 @@ namespace FMS.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTripsAsync()
+        public async Task<IActionResult> GetTripsAsync([FromQuery] TripParams @params)
         {
-            var trips = await _tripService.GetTripsAsync();
+            var trips = await _tripService.GetTripsAsync(@params);
             return Ok(trips);
         }
         [HttpGet("stats")]
@@ -35,9 +36,9 @@ namespace FMS.Controllers
             return Ok(order);
         }
         [HttpGet("booked")]
-        public async Task<IActionResult> GetBookedTripsAsync()
+        public async Task<IActionResult> GetBookedTripsAsync([FromQuery] BookedTripParams @params)
         {
-            var bookedTrips = await _tripService.GetBookedTripListAsync();
+            var bookedTrips = await _tripService.GetBookedTripListAsync(@params);
             return Ok(bookedTrips);
         }
         [HttpGet("booked/stats")]

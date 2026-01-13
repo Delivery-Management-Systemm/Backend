@@ -1,8 +1,10 @@
 ﻿using FMS.DAL.Interfaces;
 using FMS.Models;
+using FMS.Pagination;
 using FMS.ServiceLayer.DTO.TripDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace FMS.ServiceLayer.Implementation
 {
@@ -13,61 +15,83 @@ namespace FMS.ServiceLayer.Implementation
         {
             _unitOfWork = unitOfWork;
         }
-        public async Task<List<TripListDto>> GetTripsAsync()
+        public async Task<PaginatedResult<TripListDto>> GetTripsAsync(TripParams @params)
         {
-            var trips = await _unitOfWork.Trips
-               .Query()
-               .Include(t => t.Vehicle)
-               .Include(t => t.TripDrivers)
-                   .ThenInclude(td => td.Driver)
-               .Include(t => t.ExtraExpenses)
-               .OrderByDescending(t => t.StartTime)
-               .Select(t => new TripListDto
-               {
-                   Id = t.TripID,
+            // 1. Khởi tạo query (Bỏ Include vì Select sẽ tự động JOIN)
+            var query = _unitOfWork.Trips.Query().AsNoTracking();
 
-                   Vehicle = t.Vehicle.LicensePlate,
+            // --- BƯỚC 1: LỌC (FILTERING) ---
+            if (!string.IsNullOrEmpty(@params.TripStatus))
+            {
+                query = query.Where(t => t.TripStatus == @params.TripStatus);
+            }
 
-                   Driver = t.TripDrivers
-                       .Where(td => td.Role == "Main Driver")
-                       .Select(td => td.Driver.FullName)
-                       .FirstOrDefault() ?? "Chưa gán",
+            // --- BƯỚC 2: SẮP XẾP (SORTING) ---
+            // Lưu ý: Sửa lại các case cho khớp với ToLower()
+            if (!string.IsNullOrEmpty(@params.SortBy))
+            {
+                query = @params.SortBy.ToLower() switch
+                {
+                    "status" => @params.IsDescending ? query.OrderByDescending(t => t.TripStatus) : query.OrderBy(t => t.TripStatus),
+                    "distance" => @params.IsDescending ? query.OrderByDescending(t => t.TotalDistanceKm) : query.OrderBy(t => t.TotalDistanceKm),
+                    "starttime" => @params.IsDescending ? query.OrderByDescending(t => t.StartTime) : query.OrderBy(t => t.StartTime),
+                    // Default sort theo StartTime nếu SortBy không khớp
+                    _ => @params.IsDescending ? query.OrderByDescending(t => t.StartTime) : query.OrderBy(t => t.StartTime)
+                };
+            }
+            else
+            {
+                query = query.OrderByDescending(t => t.StartTime);
+            }
 
-                   Route = t.StartLocation + " - " + t.EndLocation,
+            // --- BƯỚC 3: MAPPING SANG DTO ---
+            var dtoQuery = query.Select(t => new TripListDto
+            {
+                Id = t.TripID,
+                Vehicle = t.Vehicle.LicensePlate,
 
-                   Date = t.StartTime.ToString("dd/MM/yyyy"),
+                // Lấy tài xế chính
+                Driver = t.TripDrivers
+                    .Where(td => td.Role == "Main Driver")
+                    .Select(td => td.Driver.FullName)
+                    .FirstOrDefault() ?? "Chưa gán",
 
-                   Time = t.EndTime != null
-                       ? $"{t.StartTime:HH:mm} - {t.EndTime:HH:mm}"
-                       : null,
+                Route = t.StartLocation + " - " + t.EndLocation,
 
-                   Distance = t.TotalDistanceKm != null
-                       ? t.TotalDistanceKm + " km"
-                       : "0 km",
+                // Lưu ý: Một số bản EF Core cũ không dịch được .ToString("dd/MM/yyyy") sang SQL.
+                // Nếu lỗi, hãy trả về DateTime thô và format ở Frontend.
+                Date = t.StartTime.ToString("dd/MM/yyyy"),
 
-                   Cost = t.ExtraExpenses.Any()
-                       ? string.Format("{0:N0}đ", t.ExtraExpenses.Sum(e => e.Amount))
-                       : "0đ",
+                Time = t.EndTime != null
 
-                   Status = t.TripStatus == "Completed"
-                       ? "completed"
-                       : "in-progress",
+                ? $"{t.StartTime:HH:mm} - {t.EndTime:HH:mm}"
 
-                   Multiday = t.EndTime != null &&
-                              t.StartTime.Date != t.EndTime.Value.Date,
+                : null,
 
-                   Charges = t.ExtraExpenses.Select(e => new TripChargeDto
-                   {
-                       Id = e.ExtraExpenseID,
-                       Name = e.ExpenseType,
-                       AmountNumber = e.Amount,
-                       //Amount = string.Format("{0:N0}đ", e.Amount)
-                   }).ToList()
-               })
-               .ToListAsync();
+                Distance = (t.TotalDistanceKm ?? 0) + " km",
 
-            return trips;
+                // Tính tổng chi phí (EF Core dịch Sum() sang SQL rất tốt)
+                Cost = t.ExtraExpenses.Any()
+                    ? t.ExtraExpenses.Sum(e => e.Amount).ToString() + "đ"
+                    : "0đ",
+
+                Status = t.TripStatus == "Completed" ? "completed" : "in-progress",
+
+                Multiday = t.EndTime != null && t.StartTime.Date != t.EndTime.Value.Date,
+
+                Charges = t.ExtraExpenses.Select(e => new TripChargeDto
+                {
+                    Id = e.ExtraExpenseID,
+                    Name = e.ExpenseType,
+                    AmountNumber = e.Amount
+                }).ToList()
+            });
+
+            // --- BƯỚC 4: PHÂN TRANG ---
+            // Sử dụng logic skip = page * limit của bạn
+            return await dtoQuery.paginate(@params.PageSize, @params.PageNumber);
         }
+
         public async Task<TripStatsDto> GetTripStatsAsync()
         {
             var today = DateTime.Today;
@@ -128,14 +152,26 @@ namespace FMS.ServiceLayer.Implementation
          
         }
 
-        public async Task<List<BookedTripListDto>> GetBookedTripListAsync()
+        public async Task<PaginatedResult<BookedTripListDto>> GetBookedTripListAsync(BookedTripParams @params)
         {
-            var bookedTrips = await _unitOfWork.Trips.Query()
-                .Where(t => t.ScheduledStartTime != null && t.TripStatus == "Planned")
-                .Include(t => t.Vehicle)
-                .Include(t => t.TripDrivers)
-                    .ThenInclude(td => td.Driver)
-                .Select(t => new BookedTripListDto
+            var query =  _unitOfWork.Trips.Query()
+                .Where(t => t.ScheduledStartTime != null && t.TripStatus == "Planned").AsNoTracking();
+
+
+
+            // --- BƯỚC 2: SẮP XẾP (SORTING) ---
+            // Lưu ý: Sửa lại các case cho khớp với ToLower()
+            if (!string.IsNullOrEmpty(@params.SortBy))
+            {
+                query = @params.SortBy.ToLower() switch
+                {
+                    "starttime" => @params.IsDescending ? query.OrderByDescending(t => t.StartTime) : query.OrderBy(t => t.StartTime),
+                    // Default sort theo StartTime nếu SortBy không khớp
+                    _ => @params.IsDescending ? query.OrderByDescending(t => t.StartTime) : query.OrderBy(t => t.StartTime)
+                };
+            }
+
+            var dtoQuery = query.Select(t => new BookedTripListDto
                 {
                     TripID = t.TripID,
                     // Customer
@@ -164,10 +200,10 @@ namespace FMS.ServiceLayer.Implementation
                                         .Select(td => td.Driver.FullName)
                                         .FirstOrDefault(),
                     Status = t.TripStatus
-                })
-                .ToListAsync();
-            return bookedTrips;
+                });
+            return await dtoQuery.paginate(@params.PageSize, @params.PageNumber);
         }
+
         public async Task<BookedTripStatsDto> GetBookedTripStatsAsync()
         {
             var trips = _unitOfWork.Trips.Query();
