@@ -1,4 +1,5 @@
-﻿using FMS.ServiceLayer.DTO.MaintenanceDto;
+﻿using FMS.Pagination;
+using FMS.ServiceLayer.DTO.MaintenanceDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -22,9 +23,9 @@ namespace FMS.Controllers
             return Ok(services);
         }
         [HttpGet]
-        public async Task<IActionResult> GetAllInvoices()
+        public async Task<IActionResult> GetAllInvoices([FromQuery] MaintenanceParams @params)
         {
-            var invoices = await _maintenanceService.GetAllInvoiceAsync();
+            var invoices = await _maintenanceService.GetAllInvoiceAsync(@params);
             return Ok(invoices);
         }
         [HttpPost]
