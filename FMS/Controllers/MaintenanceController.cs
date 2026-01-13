@@ -8,7 +8,6 @@ namespace FMS.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [EnableRateLimiting("fixed")]
     public class MaintenanceController: ControllerBase
     {
         private readonly IMaintenanceService _maintenanceService;
@@ -21,6 +20,13 @@ namespace FMS.Controllers
         {
             var services = await _maintenanceService.GetAllServiceAsync();
             return Ok(services);
+        }
+
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetMaintenanceStats()
+        {
+            var stats = await _maintenanceService.GetMaintenanceStatsAsync();
+            return Ok(stats);
         }
         [HttpGet]
         public async Task<IActionResult> GetAllInvoices([FromQuery] MaintenanceParams @params)

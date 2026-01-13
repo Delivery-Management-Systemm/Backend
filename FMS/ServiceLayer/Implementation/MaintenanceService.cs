@@ -141,6 +141,48 @@ namespace FMS.ServiceLayer.Implementation
             return maintenance.MaintenanceID;
         }
 
+        public async Task<MaintenanceStatsDto> GetMaintenanceStatsAsync()
+        {
+            var maintenances = await _unitOfWork.Maintenances.Query()
+                .Include(m => m.MaintenanceServices)
+                    .ThenInclude(ms => ms.Service)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var services = await _unitOfWork.Services.Query()
+                .AsNoTracking()
+                .ToListAsync();
+
+            var totalInvoices = maintenances.Count;
+            var totalCost = maintenances.Sum(m => m.TotalCost);
+            var availableServices = services.Count;
+            var completedInvoices = maintenances.Count(m => m.MaintenanceStatus == "completed");
+
+            // Calculate service usage statistics
+            var allServiceUsages = maintenances.SelectMany(m => m.MaintenanceServices).ToList();
+            var totalServiceUsages = allServiceUsages.Count; // Tổng số lần sử dụng dịch vụ
+
+            var serviceUsage = allServiceUsages
+                .GroupBy(ms => ms.Service.ServiceName)
+                .Select(g => new ServiceStatsDto
+                {
+                    ServiceName = g.Key,
+                    Count = g.Count(),
+                    Percentage = totalServiceUsages > 0 ? Math.Round((double)g.Count() / totalServiceUsages * 100, 1) : 0
+                })
+                .OrderByDescending(s => s.Count)
+                .ToList();
+
+            return new MaintenanceStatsDto
+            {
+                TotalInvoices = totalInvoices,
+                TotalCost = totalCost.ToString("N0") + "đ",
+                AvailableServices = availableServices,
+                CompletedInvoices = completedInvoices,
+                ServiceStats = serviceUsage
+            };
+        }
+
 
     }
 }
