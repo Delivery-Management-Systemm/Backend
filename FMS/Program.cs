@@ -61,8 +61,8 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddRateLimiter(options => {
     options.AddFixedWindowLimiter("fixed", limiterOptions => {
-    limiterOptions.PermitLimit = 5; // số request cho phép
-    limiterOptions.Window = TimeSpan.FromSeconds(10); // trong 10 giây
+    limiterOptions.PermitLimit = 30; // số request cho phép
+    limiterOptions.Window = TimeSpan.FromSeconds(60); // trong 10 giây
     limiterOptions.QueueLimit = 0; 
     });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;

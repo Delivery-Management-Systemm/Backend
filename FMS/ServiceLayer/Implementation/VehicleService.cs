@@ -1,5 +1,6 @@
 ﻿using FMS.DAL.Interfaces;
 using FMS.Models;
+using FMS.Pagination;
 using FMS.ServiceLayer.DTO.VehicleDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -57,27 +58,64 @@ namespace FMS.ServiceLayer.Implementation
             return 7; // B
         }
 
-        public async Task<List<VehicleListDto>> GetVehiclesAsync()
+        public async Task<PaginatedResult<VehicleListDto>> GetVehiclesAsync(VehicleParams @params)
         {
-            var vehicles = await _unitOfWork.Vehicles.Query()
-                            .Include(v => v.RequiredLicenseClass)
-                            .Select(v => new VehicleListDto
-                            {
-                                VehicleID = v.VehicleID,
-                                LicensePlate = v.LicensePlate,
-                                VehicleType = v.VehicleType,
-                                VehicleModel = v.VehicleModel,
-                                VehicleBrand = v.VehicleBrand,
-                                CurrentKm = v.CurrentKm,
-                                VehicleStatus = v.VehicleStatus,
-                                ManufacturedYear = v.ManufacturedYear,
+            // Khởi tạo query từ UnitOfWork
+            var query = _unitOfWork.Vehicles.Query().AsNoTracking();
 
-                                RequiredLicenseClassID = v.RequiredLicenseClassID,
-                                RequiredLicenseCode = v.RequiredLicenseClass.Code,
-                                RequiredLicenseName = v.RequiredLicenseClass.LicenseDescription
-                            })
-                            .ToListAsync();
-            return vehicles;
+            // --- BƯỚC 1: LỌC (FILTERING) ---
+            if (!string.IsNullOrEmpty(@params.FuelType))
+            {
+                query = query.Where(v => v.FuelType == @params.FuelType);
+            }
+
+            if (!string.IsNullOrEmpty(@params.VehicleBrand))
+            {
+                query = query.Where(v => v.VehicleBrand == @params.VehicleBrand);
+            }
+
+            if (!string.IsNullOrEmpty(@params.VehicleStatus))
+            {
+                query = query.Where(v => v.VehicleStatus == @params.VehicleStatus);
+            }
+
+            // --- BƯỚC 2: SẮP XẾP (SORTING) ---
+            if (!string.IsNullOrEmpty(@params.SortBy))
+            {
+                query = @params.SortBy.ToLower() switch
+                {
+                    "licenseplate" => @params.IsDescending ? query.OrderByDescending(v => v.LicensePlate) : query.OrderBy(v => v.LicensePlate),
+                    "brand" => @params.IsDescending ? query.OrderByDescending(v => v.VehicleBrand) : query.OrderBy(v => v.VehicleBrand),
+                    "km" => @params.IsDescending ? query.OrderByDescending(v => v.CurrentKm) : query.OrderBy(v => v.CurrentKm),
+                    "year" => @params.IsDescending ? query.OrderByDescending(v => v.ManufacturedYear) : query.OrderBy(v => v.ManufacturedYear),
+                    // Mặc định sắp xếp theo LicensePlate như params của bạn
+                    _ => @params.IsDescending ? query.OrderByDescending(v => v.LicensePlate) : query.OrderBy(v => v.LicensePlate)
+                };
+            }
+
+            // --- BƯỚC 3: MAPPING SANG DTO ---
+            // Lưu ý: Không cần .Include() vì .Select() sẽ tự động JOIN các bảng liên quan
+            var dtoQuery = query.Select(v => new VehicleListDto
+            {
+                VehicleID = v.VehicleID,
+                LicensePlate = v.LicensePlate,
+                VehicleType = v.VehicleType,
+                VehicleModel = v.VehicleModel,
+                VehicleBrand = v.VehicleBrand,
+                CurrentKm = v.CurrentKm,
+                VehicleStatus = v.VehicleStatus,
+                ManufacturedYear = v.ManufacturedYear,
+
+                RequiredLicenseClassID = v.RequiredLicenseClassID,
+                RequiredLicenseCode = v.RequiredLicenseClass.Code,
+                RequiredLicenseName = v.RequiredLicenseClass.LicenseDescription
+            });
+
+            // --- BƯỚC 4: PHÂN TRANG ---
+            // Vì logic 'paginate' của bạn dùng: skip = page * limit
+            // Nếu @params.PageNumber của bạn bắt đầu từ 1, hãy truyền (@params.PageNumber - 1)
+            // Nếu bạn muốn dùng 0 là trang đầu tiên thì giữ nguyên @params.PageNumber
+            return await dtoQuery.paginate(@params.PageSize, @params.PageNumber);
         }
 
         public async Task<VehicleDetailDto?> GetVehicleDetailsAsync(int vehicleId)
