@@ -214,5 +214,46 @@ namespace FMS.ServiceLayer.Implementation
             };
 
         }
+
+        public async Task<Trip> CreateBookingTripAsync(CreateBookingTripDto dto)
+        {
+            var trip = new Trip
+            {
+                // CHƯA ASSIGN
+                VehicleID = null,
+
+                // CUSTOMER
+                CustomerName = dto.CustomerName,
+                CustomerPhone = dto.CustomerPhone,
+                CustomerEmail = dto.CustomerEmail,
+
+                // ROUTE
+                StartLocation = dto.StartLocation,
+                EndLocation = dto.EndLocation,
+                RouteGeometryJson = dto.RouteGeometryJson,
+
+                // ESTIMATE
+                EstimatedDistanceKm = dto.EstimatedDistanceKm,
+                EstimatedDurationMin = dto.EstimatedDurationMin,
+
+                // BOOKING TIME
+                ScheduledStartTime = dto.ScheduledStartTime,
+
+                // REQUEST
+                RequestedVehicleType = dto.RequestedVehicleType,
+                RequestedPassengers = dto.RequestedPassengers,
+                RequestedCargo = dto.RequestedCargo,
+
+                // STATUS
+                TripStatus = "planned",
+                StartTime = dto.ScheduledStartTime
+            };
+
+            await _unitOfWork.Trips.AddAsync(trip);
+            await _unitOfWork.SaveChangesAsync();
+
+            return trip;
+        }
+
     }
 }

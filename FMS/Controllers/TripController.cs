@@ -1,4 +1,5 @@
 ﻿using FMS.Pagination;
+using FMS.ServiceLayer.DTO.TripDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -46,6 +47,13 @@ namespace FMS.Controllers
         {
             var bookedTripStats = await _tripService.GetBookedTripStatsAsync();
             return Ok(bookedTripStats);
+        }
+        [HttpPost("booked")]
+        [EnableRateLimiting("fixed")]
+        public async Task<IActionResult> CreateBookingTripAsync([FromBody] CreateBookingTripDto dto)
+        {
+            var createdTrip = await _tripService.CreateBookingTripAsync(dto);
+            return Ok(createdTrip);
         }
     }
 }
