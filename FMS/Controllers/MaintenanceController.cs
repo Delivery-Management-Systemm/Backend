@@ -41,5 +41,32 @@ namespace FMS.Controllers
             var maintenanceId = await _maintenanceService.CreateMaintenanceAsync(dto);
             return CreatedAtAction(nameof(GetAllInvoices), new { id = maintenanceId }, new { Id = maintenanceId });
         }
+
+        // GET: api/maintenance/options/types
+        [HttpGet("options/types")]
+        public IActionResult GetMaintenanceTypes()
+        {
+            var types = new[]
+            {
+                new { value = "Bảo dưỡng định kỳ", label = "Bảo dưỡng định kỳ" },
+                new { value = "Sửa chữa khẩn cấp", label = "Sửa chữa khẩn cấp" },
+                new { value = "Thay thế linh kiện", label = "Thay thế linh kiện" }
+            };
+            return Ok(types);
+        }
+
+        // GET: api/maintenance/options/statuses
+        [HttpGet("options/statuses")]
+        public IActionResult GetMaintenanceStatuses()
+        {
+            var statuses = new[]
+            {
+                new { value = "scheduled", label = "Đã lên lịch" },
+                new { value = "processing", label = "Đang thực hiện" },
+                new { value = "completed", label = "Hoàn thành" },
+                new { value = "overdue", label = "Quá hạn" }
+            };
+            return Ok(statuses);
+        }
     }
 }

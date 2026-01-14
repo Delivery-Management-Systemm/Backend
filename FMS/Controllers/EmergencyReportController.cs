@@ -45,5 +45,30 @@ namespace FMS.Controllers
             var stats = await _emergencyReportService.GetEmergencyReportStatsAsync();
             return Ok(stats);
         }
+
+        // GET: api/emergencyreport/options/statuses
+        [HttpGet("options/statuses")]
+        public IActionResult GetEmergencyStatuses()
+        {
+            var statuses = new[]
+            {
+                new { value = "new", label = "Mới" },
+                new { value = "processing", label = "Đang xử lý" },
+                new { value = "resolved", label = "Đã giải quyết" }
+            };
+            return Ok(statuses);
+        }
+
+        // GET: api/emergencyreport/options/levels
+        [HttpGet("options/levels")]
+        public IActionResult GetEmergencyLevels()
+        {
+            var levels = new[]
+            {
+                new { value = "high", label = "Cao" },
+                new { value = "critical", label = "Khẩn cấp" }
+            };
+            return Ok(levels);
+        }
     }
 }

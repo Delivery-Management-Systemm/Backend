@@ -95,5 +95,18 @@ namespace FMS.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+        // GET: api/driver/options/statuses
+        [HttpGet("options/statuses")]
+        public IActionResult GetDriverStatuses()
+        {
+            var statuses = new[]
+            {
+                new { value = "available", label = "Sẵn sàng" },
+                new { value = "on_trip", label = "Đang chạy" },
+                new { value = "offline", label = "Nghỉ" }
+            };
+            return Ok(statuses);
+        }
     }
 }

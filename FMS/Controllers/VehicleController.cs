@@ -90,5 +90,73 @@ namespace FMS.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+        // GET: api/vehicle/options/statuses
+        [HttpGet("options/statuses")]
+        public IActionResult GetVehicleStatuses()
+        {
+            var statuses = new[]
+            {
+                new { value = "available", label = "Sẵn sàng" },
+                new { value = "in_use", label = "Đang dùng" },
+                new { value = "maintenance", label = "Bảo trì" },
+                new { value = "on_trip", label = "Đang chạy" }
+            };
+            return Ok(statuses);
+        }
+
+        // GET: api/vehicle/options/types
+        [HttpGet("options/types")]
+        public IActionResult GetVehicleTypes()
+        {
+            var types = new[]
+            {
+                new { value = "Xe tải 8 tấn", label = "Xe tải 8 tấn" },
+                new { value = "Xe 16 chỗ", label = "Xe 16 chỗ" },
+                new { value = "Xe tải nhẹ", label = "Xe tải nhẹ" },
+                new { value = "Xe tải lớn", label = "Xe tải lớn" },
+                new { value = "Xe tải 2.5 tấn", label = "Xe tải 2.5 tấn" },
+                new { value = "Xe tải 5 tấn", label = "Xe tải 5 tấn" },
+                new { value = "Xe 12 chỗ", label = "Xe 12 chỗ" },
+                new { value = "Xe tải 7 tấn", label = "Xe tải 7 tấn" },
+                new { value = "Xe tải 6 tấn", label = "Xe tải 6 tấn" },
+                new { value = "Xe bán tải", label = "Xe bán tải" },
+                new { value = "SUV 7 chỗ", label = "SUV 7 chỗ" },
+                new { value = "Xe tải 5.5 tấn", label = "Xe tải 5.5 tấn" },
+                new { value = "Xe tải 3.5 tấn", label = "Xe tải 3.5 tấn" }
+            };
+            return Ok(types);
+        }
+
+        // GET: api/vehicle/options/fuel-types
+        [HttpGet("options/fuel-types")]
+        public IActionResult GetFuelTypes()
+        {
+            var fuelTypes = new[]
+            {
+                new { value = "Xăng", label = "Xăng" },
+                new { value = "Dầu", label = "Dầu" },
+                new { value = "Điện", label = "Điện" },
+                new { value = "Hybrid", label = "Hybrid" }
+            };
+            return Ok(fuelTypes);
+        }
+
+        // GET: api/vehicle/options/brands
+        [HttpGet("options/brands")]
+        public IActionResult GetVehicleBrands()
+        {
+            var brands = new[]
+            {
+                new { value = "Toyota", label = "Toyota" },
+                new { value = "Honda", label = "Honda" },
+                new { value = "Ford", label = "Ford" },
+                new { value = "Hyundai", label = "Hyundai" },
+                new { value = "Isuzu", label = "Isuzu" },
+                new { value = "Hino", label = "Hino" },
+                new { value = "Thaco", label = "Thaco" }
+            };
+            return Ok(brands);
+        }
     }
 }

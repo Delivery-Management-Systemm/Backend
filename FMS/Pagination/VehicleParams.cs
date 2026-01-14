@@ -8,6 +8,7 @@
         public bool IsDescending { get; set; } = true;
 
         // Các tiêu chí lọc
+        public string? VehicleType { get; set; }
         public string? FuelType { get; set; }
         public string? VehicleBrand { get; set; }
         public string? VehicleStatus { get; set; }

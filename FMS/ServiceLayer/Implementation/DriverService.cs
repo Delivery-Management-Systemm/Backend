@@ -241,10 +241,10 @@ namespace FMS.ServiceLayer.Implementation
                 driver.Phone = dto.Phone.Trim();
             if (!string.IsNullOrEmpty(dto.Email))
                 driver.Email = dto.Email.Trim();
-            if (!string.IsNullOrEmpty(dto.Address))
-                driver.Address = dto.Address.Trim();
-            if (dto.DateOfBirth.HasValue)
-                driver.DateOfBirth = dto.DateOfBirth.Value;
+            if (!string.IsNullOrEmpty(dto.BirthPlace))
+                driver.BirthPlace = dto.BirthPlace.Trim();
+            if (dto.ExperienceYears.HasValue)
+                driver.ExperienceYears = dto.ExperienceYears.Value;
             if (!string.IsNullOrEmpty(dto.DriverStatus))
                 driver.DriverStatus = dto.DriverStatus;
 
@@ -258,7 +258,7 @@ namespace FMS.ServiceLayer.Implementation
             var driver = await _unitOfWork.Drivers.GetByIdAsync(driverId);
             if (driver == null) return false;
 
-            _unitOfWork.Drivers.Delete(driver);
+            _unitOfWork.Drivers.Remove(driver);
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
