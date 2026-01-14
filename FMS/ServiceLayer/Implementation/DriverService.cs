@@ -229,5 +229,38 @@ namespace FMS.ServiceLayer.Implementation
             _unitOfWork.Drivers.Update(driver);
             await _unitOfWork.SaveChangesAsync();
         }
+
+        public async Task<bool> UpdateDriverAsync(int driverId, UpdateDriverDto dto)
+        {
+            var driver = await _unitOfWork.Drivers.GetByIdAsync(driverId);
+            if (driver == null) return false;
+
+            if (!string.IsNullOrEmpty(dto.FullName))
+                driver.FullName = dto.FullName.Trim();
+            if (!string.IsNullOrEmpty(dto.Phone))
+                driver.Phone = dto.Phone.Trim();
+            if (!string.IsNullOrEmpty(dto.Email))
+                driver.Email = dto.Email.Trim();
+            if (!string.IsNullOrEmpty(dto.Address))
+                driver.Address = dto.Address.Trim();
+            if (dto.DateOfBirth.HasValue)
+                driver.DateOfBirth = dto.DateOfBirth.Value;
+            if (!string.IsNullOrEmpty(dto.DriverStatus))
+                driver.DriverStatus = dto.DriverStatus;
+
+            _unitOfWork.Drivers.Update(driver);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteDriverAsync(int driverId)
+        {
+            var driver = await _unitOfWork.Drivers.GetByIdAsync(driverId);
+            if (driver == null) return false;
+
+            _unitOfWork.Drivers.Delete(driver);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
     }
 }

@@ -67,5 +67,33 @@ namespace FMS.Controllers
             var result = await _driverService.CreateDriverAsync(dto);
             return Ok(result);
         }
+
+        [HttpPut("{driverId}")]
+        public async Task<IActionResult> UpdateDriver(int driverId, [FromBody] UpdateDriverDto dto)
+        {
+            try
+            {
+                var result = await _driverService.UpdateDriverAsync(driverId, dto);
+                return result ? Ok(new { message = "Driver updated successfully" }) : NotFound(new { message = "Driver not found" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpDelete("{driverId}")]
+        public async Task<IActionResult> DeleteDriver(int driverId)
+        {
+            try
+            {
+                var result = await _driverService.DeleteDriverAsync(driverId);
+                return result ? Ok(new { message = "Driver deleted successfully" }) : NotFound(new { message = "Driver not found" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 }

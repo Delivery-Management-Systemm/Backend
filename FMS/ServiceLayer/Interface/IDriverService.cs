@@ -10,5 +10,7 @@ namespace FMS.ServiceLayer.Interface
         Task<DriverDetailsDto> GetDriverDetailsAsync(int driverId);
         Task<DriverDetailsDto> CreateDriverAsync(CreateDriverDto dto);
         Task UpdateDriverRatingAsync(int driverId);
+        Task<bool> UpdateDriverAsync(int driverId, UpdateDriverDto dto);
+        Task<bool> DeleteDriverAsync(int driverId);
     }
 }
