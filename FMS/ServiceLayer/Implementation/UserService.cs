@@ -57,7 +57,8 @@ namespace FMS.ServiceLayer.Implementation
                     new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.Name, user.FullName),
-                    new Claim(ClaimTypes.Role, user.Role ?? "Manager")
+                    new Claim(ClaimTypes.Role, user.Role ?? "staff"),
+                    new Claim(ClaimTypes.MobilePhone, user.Phone)
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(expirationMinutes),
                 Issuer = issuer,
@@ -127,9 +128,19 @@ namespace FMS.ServiceLayer.Implementation
             return user;
         }
 
+        public async Task<User> GetByPhoneAsync(string phone)
+        {
+            var user = await _unitOfWork.Users.Query()
+                .FirstOrDefaultAsync(u => u.Phone == phone);
+            if (user == null)
+                throw new InvalidOperationException("User not found");
+
+            return user;
+        }
+
         public async Task<User> RegisterAsync(User user, string password)
         {
-            if (string.IsNullOrWhiteSpace(user?.Email))
+            /*if (string.IsNullOrWhiteSpace(user?.Email))
                 throw new InvalidOperationException("Email is required");
 
             var normalizedEmail = NormalizeEmail(user.Email);
@@ -140,25 +151,25 @@ namespace FMS.ServiceLayer.Implementation
                 throw new InvalidOperationException("Email is already registered");
 
             if (!_cache.TryGetValue($"{RegistrationVerifiedPrefix}{normalizedEmail}", out bool isVerified) || !isVerified)
-                throw new InvalidOperationException("Please verify your email before creating an account.");
+                throw new InvalidOperationException("Please verify your email before creating an account.");*/
 
-            user.Email = user.Email.Trim();
+            //user.Email = user.Email.Trim();
             user.FullName = user.FullName?.Trim() ?? string.Empty;
-            user.Phone = user.Phone?.Trim();
-            user.Role = "Manager";
+            user.Phone = user.Phone.Trim();
+            user.Role = string.IsNullOrWhiteSpace(user.Role) ? "staff" : user.Role;
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
             user.RegisteredAt = DateTime.UtcNow;
             await _unitOfWork.Users.AddAsync(user);
             await _unitOfWork.SaveChangesAsync();
 
-            _cache.Remove($"{RegistrationVerifiedPrefix}{normalizedEmail}");
+            //_cache.Remove($"{RegistrationVerifiedPrefix}{normalizedEmail}");
 
             return user;
         }
 
-        public async Task<(User user, string token)> LoginAsync(string email, string password)
+        public async Task<(User user, string token)> LoginAsync(string phone, string password)
         {
-            var user = await GetByEmailAsync(email);
+            var user = await GetByPhoneAsync(phone);
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
                 throw new InvalidOperationException("Invalid credentials");
 

@@ -78,7 +78,6 @@ namespace FMS.Controllers
                 var user = new User
                 {
                     FullName = request.FullName,
-                    Email = request.Email,
                     Phone = request.Phone
                 };
 
@@ -134,11 +133,11 @@ namespace FMS.Controllers
 
         // POST: api/user/login
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginDto request)
         {
             try
             {
-                var (user, token) = await _userService.LoginAsync(request.Email, request.Password);
+                var (user, token) = await _userService.LoginAsync(request.Phone, request.Password);
                 return Ok(new { user, token });
             }
             catch (InvalidOperationException ex)
@@ -205,11 +204,3 @@ namespace FMS.Controllers
 }
 
 
-// DTOs for request/response
-public class UserRegistrationRequest
-{
-    public string FullName { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Phone { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
