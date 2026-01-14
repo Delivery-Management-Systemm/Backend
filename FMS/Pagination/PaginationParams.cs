@@ -46,17 +46,28 @@ namespace FMS.Pagination
         {
             total = await queryable.CountAsync();
 
-            if (limit > total)
+            // Convert from 1-based (frontend) to 0-based (backend) indexing
+            int zeroBasedPage = page - 1;
+            if (zeroBasedPage < 0)
             {
-                limit = total;
-                page = 0;
+                zeroBasedPage = 0;
             }
 
-            int skip = page * limit;
-            if (skip + limit > total)
+            // Calculate skip
+            int skip = zeroBasedPage * limit;
+
+            // If requested page is beyond available data, return empty result
+            if (skip >= total && total > 0)
             {
-                skip = total - limit;
-                page = total / limit - 1;
+                objects = new List<T>();
+                return this;
+            }
+
+            // If no data at all, return empty
+            if (total == 0)
+            {
+                objects = new List<T>();
+                return this;
             }
 
             objects = await queryable.Skip(skip).Take(limit).ToListAsync();

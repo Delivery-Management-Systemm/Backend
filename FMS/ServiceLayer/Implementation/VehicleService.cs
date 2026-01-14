@@ -64,6 +64,11 @@ namespace FMS.ServiceLayer.Implementation
             var query = _unitOfWork.Vehicles.Query().AsNoTracking();
 
             // --- BƯỚC 1: LỌC (FILTERING) ---
+            if (!string.IsNullOrEmpty(@params.VehicleType))
+            {
+                query = query.Where(v => v.VehicleType == @params.VehicleType);
+            }
+
             if (!string.IsNullOrEmpty(@params.FuelType))
             {
                 query = query.Where(v => v.FuelType == @params.FuelType);
@@ -102,6 +107,7 @@ namespace FMS.ServiceLayer.Implementation
                 VehicleType = v.VehicleType,
                 VehicleModel = v.VehicleModel,
                 VehicleBrand = v.VehicleBrand,
+                FuelType = v.FuelType,
                 CurrentKm = v.CurrentKm,
                 VehicleStatus = v.VehicleStatus,
                 ManufacturedYear = v.ManufacturedYear,
@@ -242,7 +248,7 @@ namespace FMS.ServiceLayer.Implementation
             var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(vehicleId);
             if (vehicle == null) return false;
 
-            _unitOfWork.Vehicles.Delete(vehicle);
+            _unitOfWork.Vehicles.Remove(vehicle);
             await _unitOfWork.SaveChangesAsync();
             return true;
         }

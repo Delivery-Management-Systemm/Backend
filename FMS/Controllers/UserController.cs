@@ -217,7 +217,36 @@ namespace FMS.Controllers
             }
         }
 
+        // GET: api/user/options/roles
+        [HttpGet("options/roles")]
+        public IActionResult GetUserRoles()
+        {
+            var roles = new[]
+            {
+                new { value = "admin", label = "Admin" },
+                new { value = "manager", label = "Manager" },
+                new { value = "staff", label = "Staff" }
+            };
+            return Ok(roles);
+        }
+
+        // GET: api/user/options/departments
+        [HttpGet("options/departments")]
+        public IActionResult GetDepartments()
+        {
+            var departments = new[]
+            {
+                new { value = "Logistics", label = "Logistics" },
+                new { value = "Operations", label = "Operations" },
+                new { value = "Maintenance", label = "Maintenance" },
+                new { value = "Fleet", label = "Fleet" },
+                new { value = "Dispatch", label = "Dispatch" },
+                new { value = "IT", label = "IT" },
+                new { value = "Safety", label = "Safety" },
+                new { value = "Customer Service", label = "Customer Service" }
+            };
+            return Ok(departments);
+        }
+
     }
 }
-
-
