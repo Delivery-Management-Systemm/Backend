@@ -23,9 +23,8 @@ namespace FMS.Controllers
             _environment = environment;
         }
 
-        // GET: api/user/all (Admin only)
+        // GET: api/user/all
         [HttpGet("all")]
-        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetAllUsers([FromQuery] UserParams @params)
         {
             try
@@ -184,9 +183,27 @@ namespace FMS.Controllers
             }
         }
 
+        // PUT: api/user/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateUserProfileDto dto)
+        {
+            try
+            {
+                var result = await _userService.UpdateProfileAsync(id, dto);
+                return result ? Ok(new { message = "Profile updated successfully" }) : BadRequest("Failed to update profile");
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
         // DELETE: api/user/{id}
         [HttpDelete("{id}")]
-        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> DeleteAccount(int id)
         {
             try

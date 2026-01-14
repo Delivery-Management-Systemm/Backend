@@ -205,5 +205,46 @@ namespace FMS.ServiceLayer.Implementation
             await _unitOfWork.SaveChangesAsync();
             return vehicle;
         }
+
+        public async Task<bool> UpdateVehicleAsync(int vehicleId, VehicleUpdateDto dto)
+        {
+            var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(vehicleId);
+            if (vehicle == null) return false;
+
+            if (!string.IsNullOrEmpty(dto.LicensePlate))
+                vehicle.LicensePlate = dto.LicensePlate.Trim().ToUpperInvariant();
+            if (!string.IsNullOrEmpty(dto.VehicleType))
+                vehicle.VehicleType = dto.VehicleType.Trim();
+            if (!string.IsNullOrEmpty(dto.VehicleBrand))
+                vehicle.VehicleBrand = dto.VehicleBrand.Trim();
+            if (!string.IsNullOrEmpty(dto.VehicleModel))
+                vehicle.VehicleModel = dto.VehicleModel.Trim();
+            if (dto.ManufacturedYear.HasValue)
+                vehicle.ManufacturedYear = dto.ManufacturedYear.Value;
+            if (!string.IsNullOrEmpty(dto.Capacity))
+                vehicle.Capacity = dto.Capacity.Trim();
+            if (dto.CurrentKm.HasValue)
+                vehicle.CurrentKm = dto.CurrentKm.Value;
+            if (!string.IsNullOrEmpty(dto.FuelType))
+                vehicle.FuelType = dto.FuelType;
+            if (!string.IsNullOrEmpty(dto.VehicleStatus))
+                vehicle.VehicleStatus = dto.VehicleStatus;
+            if (dto.DriverID.HasValue)
+                vehicle.DriverID = dto.DriverID.Value;
+
+            _unitOfWork.Vehicles.Update(vehicle);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteVehicleAsync(int vehicleId)
+        {
+            var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(vehicleId);
+            if (vehicle == null) return false;
+
+            _unitOfWork.Vehicles.Delete(vehicle);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
     }
 }

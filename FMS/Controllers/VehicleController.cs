@@ -62,5 +62,33 @@ namespace FMS.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+        [HttpPut("{vehicleId}")]
+        public async Task<IActionResult> UpdateVehicle(int vehicleId, [FromBody] VehicleUpdateDto dto)
+        {
+            try
+            {
+                var result = await _vehicleService.UpdateVehicleAsync(vehicleId, dto);
+                return result ? Ok(new { message = "Vehicle updated successfully" }) : NotFound(new { message = "Vehicle not found" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpDelete("{vehicleId}")]
+        public async Task<IActionResult> DeleteVehicle(int vehicleId)
+        {
+            try
+            {
+                var result = await _vehicleService.DeleteVehicleAsync(vehicleId);
+                return result ? Ok(new { message = "Vehicle deleted successfully" }) : NotFound(new { message = "Vehicle not found" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 }

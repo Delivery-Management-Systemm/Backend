@@ -10,5 +10,7 @@ namespace FMS.ServiceLayer.Interface
         Task<PaginatedResult<VehicleListDto>> GetVehiclesAsync(VehicleParams @params);
         Task<VehicleDetailDto?> GetVehicleDetailsAsync(int vehicleId);
         Task<Vehicle> CreateVehicleAsync(VehicleCreateDto dto);
+        Task<bool> UpdateVehicleAsync(int vehicleId, VehicleUpdateDto dto);
+        Task<bool> DeleteVehicleAsync(int vehicleId);
     }
 }
