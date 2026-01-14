@@ -1,4 +1,5 @@
-﻿using FMS.Pagination;
+﻿using FMS.Models;
+using FMS.Pagination;
 using FMS.ServiceLayer.DTO.TripDto;
 
 namespace FMS.ServiceLayer.Interface
@@ -10,6 +11,8 @@ namespace FMS.ServiceLayer.Interface
         Task<OrderListDto> GetOrdersByIdAsync(int tripId);
         Task<PaginatedResult<BookedTripListDto>> GetBookedTripListAsync(BookedTripParams @params);
         Task<BookedTripStatsDto> GetBookedTripStatsAsync();
+
+        Task<Trip> CreateBookingTripAsync(CreateBookingTripDto dto);
 
     }
 }
