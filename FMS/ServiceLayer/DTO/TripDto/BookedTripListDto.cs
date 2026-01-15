@@ -18,9 +18,9 @@
         public string ScheduledTime { get; set; }
 
         // Request
-        public string? VehicleType { get; set; }
+        public string? RequestedVehicleType { get; set; }
         public int? Passengers { get; set; }
-        public string? Cargo { get; set; }
+        public string? RequestedCargo { get; set; }
 
         // Assignment
         public int? AssignedVehicleId { get; set; }
