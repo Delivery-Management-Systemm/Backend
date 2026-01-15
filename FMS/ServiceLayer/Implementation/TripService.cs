@@ -185,9 +185,9 @@ namespace FMS.ServiceLayer.Implementation
                     ScheduledDate = t.ScheduledStartTime.Value.Date,
                     ScheduledTime = t.ScheduledStartTime.Value.ToString("HH:mm"),
                     // Request
-                    VehicleType = t.RequestedVehicleType,
+                    RequestedVehicleType = t.RequestedVehicleType,
                     Passengers = t.RequestedPassengers,
-                    Cargo = t.RequestedCargo,
+                    RequestedCargo = t.RequestedCargo,
                     // Assignment
                     AssignedVehicleId = t.VehicleID,
                     AssignedVehiclePlate = t.Vehicle.LicensePlate,
