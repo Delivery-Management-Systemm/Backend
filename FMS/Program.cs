@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using FMS.Models;
 using System.Text;
+using System.Reflection;
+using System.IO;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using FMS.DAL.Interfaces;
@@ -95,6 +97,7 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<ITripService, TripService>();
 builder.Services.AddScoped<IEmergencyReportService, EmergencyReportService>();
 builder.Services.AddScoped<IMaintenanceService, FMS.ServiceLayer.Implementation.MaintenanceService>();
+builder.Services.AddScoped<IFuelRecordService, FMS.ServiceLayer.Implementation.FuelRecordService>();
 
 
 builder.Services.AddSwaggerGen(c =>
@@ -108,6 +111,21 @@ builder.Services.AddSwaggerGen(c =>
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Description = "Enter 'Bearer {token}'"
     });
+
+    // Include XML comments (requires GenerateDocumentationFile in project)
+    try
+    {
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+        {
+            c.IncludeXmlComments(xmlPath);
+        }
+    }
+    catch
+    {
+        // ignore if xml comments aren't available
+    }
 
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
