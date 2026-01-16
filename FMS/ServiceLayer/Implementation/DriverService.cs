@@ -12,9 +12,11 @@ namespace FMS.ServiceLayer.Implementation
     public class DriverService : IDriverService
     {
         private readonly IUnitOfWork _unitOfWork;
-        public DriverService(IUnitOfWork unitOfWork)
+        private readonly IUserService _userService;
+        public DriverService(IUnitOfWork unitOfWork, IUserService userService)
         {
             _unitOfWork = unitOfWork;
+            _userService = userService;
         }
 
         public async Task<PaginatedResult<DriverListDto>> GetDriversAsync(DriverParams @params)
@@ -140,30 +142,22 @@ namespace FMS.ServiceLayer.Implementation
         }
 
 
-        /*public async Task<DriverDetailsDto> CreateDriverAsync(CreateDriverDto dto)
+        public async Task<Driver> CreateDriverAsync(int userId,CreateDriverDto dto)
         {
-            // ===== VALIDATION =====
-            if (string.IsNullOrWhiteSpace(dto.FullName))
-                throw new Exception("Driver full name is required");
-
-            if (dto.ExperienceYears < 0)
-                throw new Exception("Experience years cannot be negative");
-
+            // ===== VALIDATION ==
             if (dto.Licenses == null || !dto.Licenses.Any())
                 throw new Exception("Driver must have at least one license");
 
             // ===== CREATE DRIVER =====
             var driver = new Driver
             {
-                FullName = dto.FullName,
-                Phone = dto.Phone,
-                Email = dto.Email,
+                UserID = userId,
                 BirthPlace = dto.BirthPlace,
                 ExperienceYears = dto.ExperienceYears,
 
                 TotalTrips = 0,
                 Rating = null,
-                DriverStatus = "Sẵn sàng"
+                DriverStatus = "available"
             };
 
             await _unitOfWork.Drivers.AddAsync(driver);
@@ -180,34 +174,56 @@ namespace FMS.ServiceLayer.Implementation
             await _unitOfWork.DriverLicenses.AddRangeAsync(licenses);
             await _unitOfWork.SaveChangesAsync();
 
-            // ===== LOAD FULL DATA =====
-            var createdDriver = await _unitOfWork.Drivers
-                .Query()
-                .Include(d => d.DriverLicenses)
-                    .ThenInclude(dl => dl.LicenseClass)
-                .FirstAsync(d => d.DriverID == driver.DriverID);
+            return driver;
+        }
 
-            // ===== MAP RESPONSE =====
-            return new DriverDetailsDto
-            {
-                DriverID = createdDriver.DriverID,
-                FullName = createdDriver.User.FullName,
-                Phone = createdDriver.User.Phone,
-                Email = createdDriver.User.Email,
-                BirthPlace = createdDriver.BirthPlace,
-                ExperienceYears = createdDriver.ExperienceYears,
-                TotalTrips = createdDriver.TotalTrips,
-                Rating = createdDriver.Rating,
-                DriverStatus = createdDriver.DriverStatus,
 
-                Licenses = createdDriver.DriverLicenses.Select(dl => new DriverLicenseDto
+        public async Task<DriverDetailsDto> RegisterDriverAsync(RegisterDriverDto dto)
+        {
+            
+                // 1️⃣ Create User
+                var user = await _userService.RegisterAsync(new User
                 {
-                    LicenseClassID = dl.LicenseClassID,
-                    LicenseClassName = dl.LicenseClass.Code,
-                    ExpiryDate = dl.ExpiryDate
-                }).ToList()
-            };
-        }*/
+                    FullName = dto.FullName,
+                    Phone = dto.Phone,
+                    Email = dto.Email,
+                    Role = "driver"
+                }, dto.Password);
+
+                // 2️⃣ Create Driver Profile
+                var driver = await CreateDriverAsync(user.UserID, dto);
+
+                // 3️⃣ Load full
+                var createdDriver = await _unitOfWork.Drivers
+                    .Query()
+                    .Include(d => d.User)
+                    .Include(d => d.DriverLicenses)
+                        .ThenInclude(dl => dl.LicenseClass)
+                    .FirstAsync(d => d.DriverID == driver.DriverID);
+
+
+                // ===== MAP RESPONSE =====
+                return new DriverDetailsDto
+                {
+                    DriverID = createdDriver.DriverID,
+                    FullName = createdDriver.User.FullName,
+                    Phone = createdDriver.User.Phone,
+                    Email = createdDriver.User.Email,
+                    BirthPlace = createdDriver.BirthPlace,
+                    ExperienceYears = createdDriver.ExperienceYears,
+                    TotalTrips = createdDriver.TotalTrips,
+                    Rating = createdDriver.Rating,
+                    DriverStatus = createdDriver.DriverStatus,
+
+                    Licenses = createdDriver.DriverLicenses.Select(dl => new DriverLicenseDto
+                    {
+                        LicenseClassID = dl.LicenseClassID,
+                        LicenseClassName = dl.LicenseClass.Code,
+                        ExpiryDate = dl.ExpiryDate
+                    }).ToList()
+                };
+            
+        }
 
         public async Task UpdateDriverRatingAsync(int driverId)
         {

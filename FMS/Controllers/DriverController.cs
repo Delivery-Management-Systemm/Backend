@@ -60,13 +60,13 @@ namespace FMS.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
-        /*[HttpPost]
+        [HttpPost]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> CreateDriver([FromBody] CreateDriverDto dto)
+        public async Task<IActionResult> CreateDriver([FromBody] RegisterDriverDto dto)
         {
-            var result = await _driverService.CreateDriverAsync(dto);
+            var result = await _driverService.RegisterDriverAsync(dto);
             return Ok(result);
-        }*/
+        }
 
         [HttpPut("{driverId}")]
         public async Task<IActionResult> UpdateDriver(int driverId, [FromBody] UpdateDriverDto dto)

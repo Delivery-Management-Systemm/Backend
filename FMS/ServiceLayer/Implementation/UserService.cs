@@ -140,18 +140,7 @@ namespace FMS.ServiceLayer.Implementation
 
         public async Task<User> RegisterAsync(User user, string password)
         {
-            /*if (string.IsNullOrWhiteSpace(user?.Email))
-                throw new InvalidOperationException("Email is required");
-
-            var normalizedEmail = NormalizeEmail(user.Email);
-
-            var exists = await _unitOfWork.Users.Query()
-                .AnyAsync(u => u.Email.ToLower() == normalizedEmail);
-            if (exists)
-                throw new InvalidOperationException("Email is already registered");
-
-            if (!_cache.TryGetValue($"{RegistrationVerifiedPrefix}{normalizedEmail}", out bool isVerified) || !isVerified)
-                throw new InvalidOperationException("Please verify your email before creating an account.");*/
+            
 
             //user.Email = user.Email.Trim();
             user.FullName = user.FullName?.Trim() ?? string.Empty;
@@ -162,7 +151,7 @@ namespace FMS.ServiceLayer.Implementation
             await _unitOfWork.Users.AddAsync(user);
             await _unitOfWork.SaveChangesAsync();
 
-            //_cache.Remove($"{RegistrationVerifiedPrefix}{normalizedEmail}");
+         
 
             return user;
         }
