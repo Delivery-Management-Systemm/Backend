@@ -98,6 +98,7 @@ builder.Services.AddScoped<ITripService, TripService>();
 builder.Services.AddScoped<IEmergencyReportService, EmergencyReportService>();
 builder.Services.AddScoped<IMaintenanceService, FMS.ServiceLayer.Implementation.MaintenanceService>();
 builder.Services.AddScoped<IFuelRecordService, FMS.ServiceLayer.Implementation.FuelRecordService>();
+builder.Services.AddScoped<ITripAssignmentService, TripAssignmentService>();
 
 
 builder.Services.AddSwaggerGen(c =>
