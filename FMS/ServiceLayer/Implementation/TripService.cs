@@ -53,7 +53,7 @@ namespace FMS.ServiceLayer.Implementation
                 // Lấy tài xế chính
                 Driver = t.TripDrivers
                     .Where(td => td.Role == "Main Driver")
-                    .Select(td => td.Driver.FullName)
+                    .Select(td => td.Driver.User.FullName)
                     .FirstOrDefault() ?? "Chưa gán",
 
                 Route = t.StartLocation + " - " + t.EndLocation,
@@ -116,6 +116,7 @@ namespace FMS.ServiceLayer.Implementation
                                         .Include(t => t.Vehicle)
                                         .Include(t => t.TripDrivers)
                                             .ThenInclude(td => td.Driver)
+                                                .ThenInclude(d => d.User)
                                         .Include(t => t.TripSteps)
                                         .Include(t => t.ExtraExpenses)
                                         .FirstAsync(d => d.TripID == tripId);
@@ -130,7 +131,7 @@ namespace FMS.ServiceLayer.Implementation
                 Vehicle = trip.Vehicle.LicensePlate,
                 Driver = trip.TripDrivers
                             .OrderByDescending(td => td.AssignedFrom)
-                            .Select(td => td.Driver.FullName)
+                            .Select(td => td.Driver.User.FullName)
                             .FirstOrDefault(),
 
                 Status = trip.TripStatus,
@@ -197,7 +198,7 @@ namespace FMS.ServiceLayer.Implementation
                                         .FirstOrDefault(),
                     AssignedDriverName = t.TripDrivers
                                         .Where(td => td.Role == "Main Driver")
-                                        .Select(td => td.Driver.FullName)
+                                        .Select(td => td.Driver.User.FullName)
                                         .FirstOrDefault(),
                     Status = t.TripStatus
                 });

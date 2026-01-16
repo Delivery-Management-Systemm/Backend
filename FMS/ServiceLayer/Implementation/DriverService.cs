@@ -24,6 +24,7 @@ namespace FMS.ServiceLayer.Implementation
                 .Include(d => d.TripDrivers)
                     .ThenInclude(td => td.Trip)
                     .ThenInclude(t => t.Vehicle)
+                .Include(d => d.User)
                 .AsNoTracking(); // Tăng hiệu năng cho query chỉ đọc
 
 
@@ -42,19 +43,20 @@ namespace FMS.ServiceLayer.Implementation
                     "experience" => @params.IsDescending ? query.OrderByDescending(e => e.ExperienceYears) : query.OrderBy(e => e.ExperienceYears),
                     "status" => @params.IsDescending ? query.OrderByDescending(e => e.DriverStatus) : query.OrderBy(e => e.DriverStatus),
                     "rating" => @params.IsDescending ? query.OrderByDescending(e => e.Rating) : query.OrderBy(e => e.Rating),
-                    _ => @params.IsDescending ? query.OrderByDescending(e => e.FullName) : query.OrderBy(e => e.FullName)
+                    _ => @params.IsDescending ? query.OrderByDescending(e => e.User.FullName) : query.OrderBy(e => e.User.FullName)
                 };
             }
             else
             {
-                query = query.OrderBy(e => e.FullName);
+                query = query.OrderBy(e => e.User.FullName);
             }
 
             var dtoQuery = query.Select(d => new DriverListDto
                 {
                     DriverID = d.DriverID,
-                    Name = d.FullName,
-                    Phone = d.Phone,
+                    Name = d.User.FullName,
+                    Phone = d.User.Phone,
+                    Email = d.User.Email,
                     ExperienceYears = d.ExperienceYears,
 
                     Licenses = d.DriverLicenses
@@ -83,13 +85,14 @@ namespace FMS.ServiceLayer.Implementation
             var history = await _unitOfWork.TripDrivers.Query()
                     .Where(td => td.DriverID == driverId)
                     .Include(td => td.Driver)
+                        .ThenInclude(d => d.User)
                     .Include(td => td.Trip)
                         .ThenInclude(t => t.Vehicle)
                     .Select(td => new DriverHistoryDto
                     {
                         DriverID = td.DriverID,
                         TripDate = td.Trip.StartTime,
-                        DriverName = td.Driver.FullName,
+                        DriverName = td.Driver.User.FullName,
                         VehiclePlate = td.Trip.Vehicle.LicensePlate,
                         Route = td.Trip.StartLocation + " - " + td.Trip.EndLocation,
                         DistanceKm = td.Trip.TotalDistanceKm,
@@ -111,15 +114,16 @@ namespace FMS.ServiceLayer.Implementation
                 .Query()
                 .Include(d => d.DriverLicenses)
                     .ThenInclude(dl => dl.LicenseClass)
+                .Include(d => d.User)
                 .FirstAsync(d => d.DriverID == driverId);
 
             // ===== MAP RESPONSE =====
             return new DriverDetailsDto
             {
                 DriverID = createdDriver.DriverID,
-                FullName = createdDriver.FullName,
-                Phone = createdDriver.Phone,
-                Email = createdDriver.Email,
+                FullName = createdDriver.User.FullName,
+                Phone = createdDriver.User.Phone,
+                Email = createdDriver.User.Email,
                 BirthPlace = createdDriver.BirthPlace,
                 ExperienceYears = createdDriver.ExperienceYears,
                 TotalTrips = createdDriver.TotalTrips,
@@ -136,7 +140,7 @@ namespace FMS.ServiceLayer.Implementation
         }
 
 
-        public async Task<DriverDetailsDto> CreateDriverAsync(CreateDriverDto dto)
+        /*public async Task<DriverDetailsDto> CreateDriverAsync(CreateDriverDto dto)
         {
             // ===== VALIDATION =====
             if (string.IsNullOrWhiteSpace(dto.FullName))
@@ -187,9 +191,9 @@ namespace FMS.ServiceLayer.Implementation
             return new DriverDetailsDto
             {
                 DriverID = createdDriver.DriverID,
-                FullName = createdDriver.FullName,
-                Phone = createdDriver.Phone,
-                Email = createdDriver.Email,
+                FullName = createdDriver.User.FullName,
+                Phone = createdDriver.User.Phone,
+                Email = createdDriver.User.Email,
                 BirthPlace = createdDriver.BirthPlace,
                 ExperienceYears = createdDriver.ExperienceYears,
                 TotalTrips = createdDriver.TotalTrips,
@@ -203,7 +207,7 @@ namespace FMS.ServiceLayer.Implementation
                     ExpiryDate = dl.ExpiryDate
                 }).ToList()
             };
-        }
+        }*/
 
         public async Task UpdateDriverRatingAsync(int driverId)
         {
@@ -236,11 +240,11 @@ namespace FMS.ServiceLayer.Implementation
             if (driver == null) return false;
 
             if (!string.IsNullOrEmpty(dto.FullName))
-                driver.FullName = dto.FullName.Trim();
+                driver.User.FullName = dto.FullName.Trim();
             if (!string.IsNullOrEmpty(dto.Phone))
-                driver.Phone = dto.Phone.Trim();
+                driver.User.Phone = dto.Phone.Trim();
             if (!string.IsNullOrEmpty(dto.Email))
-                driver.Email = dto.Email.Trim();
+                driver.User.Email = dto.Email.Trim();
             if (!string.IsNullOrEmpty(dto.BirthPlace))
                 driver.BirthPlace = dto.BirthPlace.Trim();
             if (dto.ExperienceYears.HasValue)
