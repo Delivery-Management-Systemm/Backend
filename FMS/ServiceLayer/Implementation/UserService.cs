@@ -22,6 +22,9 @@ namespace FMS.ServiceLayer.Implementation
         private const string RegistrationOtpPrefix = "register_otp_";
         private const string RegistrationVerifiedPrefix = "register_verified_";
         private const string ProfileOtpPrefix = "profile_otp_";
+        private const string ProfileVerifiedPrefix = "profile_verified_";
+        private const string PasswordOtpPrefix = "password_otp_";
+        private const string PasswordVerifiedPrefix = "password_verified_";
         public UserService(IUnitOfWork unitOfWork, IMemoryCache cache, IEmailService emailService, IConfiguration configuration)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -40,6 +43,33 @@ namespace FMS.ServiceLayer.Implementation
             return RandomNumberGenerator.GetInt32(100000, 1000000).ToString("D6");
         }
 
+        private static string NormalizePurpose(string purpose)
+        {
+            var normalized = (purpose ?? string.Empty).Trim().ToLowerInvariant();
+            return string.IsNullOrWhiteSpace(normalized) ? "register" : normalized;
+        }
+
+        private static string ResolveOtpPrefix(string purpose)
+        {
+            return purpose switch
+            {
+                "password" => PasswordOtpPrefix,
+                "profile" => ProfileOtpPrefix,
+                "email-change" => ProfileOtpPrefix,
+                _ => RegistrationOtpPrefix
+            };
+        }
+
+        private static string ResolveVerifiedPrefix(string purpose)
+        {
+            return purpose switch
+            {
+                "password" => PasswordVerifiedPrefix,
+                "profile" => ProfileVerifiedPrefix,
+                "email-change" => ProfileVerifiedPrefix,
+                _ => RegistrationVerifiedPrefix
+            };
+        }
 
         private string GenerateToken(User user)
         {
@@ -258,17 +288,26 @@ namespace FMS.ServiceLayer.Implementation
         }
 
         //dang ky gui otp va xac thuc
-        public async Task<string> SendRegistrationOtpAsync(string email)
+        public async Task<string> SendRegistrationOtpAsync(string email, string purpose = "register")
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new InvalidOperationException("Email is required");
 
+            var normalizedPurpose = NormalizePurpose(purpose);
             var normalizedEmail = NormalizeEmail(email);
 
             var alreadyExists = await _unitOfWork.Users.Query()
                 .AnyAsync(u => u.Email.ToLower() == normalizedEmail);
-            if (alreadyExists)
-                throw new InvalidOperationException("Email is already registered");
+            if (normalizedPurpose == "password")
+            {
+                if (!alreadyExists)
+                    throw new InvalidOperationException("User not found");
+            }
+            else
+            {
+                if (alreadyExists)
+                    throw new InvalidOperationException("Email is already registered");
+            }
 
             var otp = GenerateOtpCode();
 
@@ -277,33 +316,70 @@ namespace FMS.ServiceLayer.Implementation
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
             };
 
-            _cache.Set($"{RegistrationOtpPrefix}{normalizedEmail}", otp, cacheOptions);
-            _cache.Remove($"{RegistrationVerifiedPrefix}{normalizedEmail}");
+            var otpKey = $"{ResolveOtpPrefix(normalizedPurpose)}{normalizedEmail}";
+            var verifiedKey = $"{ResolveVerifiedPrefix(normalizedPurpose)}{normalizedEmail}";
+            _cache.Set(otpKey, otp, cacheOptions);
+            _cache.Remove(verifiedKey);
 
+            var subject = normalizedPurpose switch
+            {
+                "password" => "FMS password change verification",
+                "profile" => "FMS profile update verification",
+                "email-change" => "FMS email update verification",
+                _ => "Verify your FMS account"
+            };
             var body = $"<p>Your FMS verification code is <strong>{otp}</strong>.</p><p>This code expires in 10 minutes.</p>";
-            await _emailService.SendAsync(email, "Verify your FMS account", body);
+            await _emailService.SendAsync(email, subject, body);
 
             return otp;
         }
 
-        public async Task<bool> VerifyRegistrationOtpAsync(string email, string otp)
+        public async Task<bool> VerifyRegistrationOtpAsync(string email, string otp, string purpose = "register")
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(otp))
                 throw new InvalidOperationException("Email and OTP are required");
 
+            var normalizedPurpose = NormalizePurpose(purpose);
             var normalizedEmail = NormalizeEmail(email);
+            var otpKey = $"{ResolveOtpPrefix(normalizedPurpose)}{normalizedEmail}";
+            var verifiedKey = $"{ResolveVerifiedPrefix(normalizedPurpose)}{normalizedEmail}";
 
-            if (!_cache.TryGetValue($"{RegistrationOtpPrefix}{normalizedEmail}", out string cachedOtp))
+            if (!_cache.TryGetValue(otpKey, out string cachedOtp))
                 throw new InvalidOperationException("OTP has expired or is invalid");
 
             if (!string.Equals(cachedOtp, otp, StringComparison.Ordinal))
                 throw new InvalidOperationException("OTP is incorrect");
 
-            _cache.Remove($"{RegistrationOtpPrefix}{normalizedEmail}");
-            _cache.Set($"{RegistrationVerifiedPrefix}{normalizedEmail}", true, new MemoryCacheEntryOptions
+            _cache.Remove(otpKey);
+            _cache.Set(verifiedKey, true, new MemoryCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
             });
+
+            return true;
+        }
+
+        public async Task<bool> ChangePasswordWithOtpAsync(string email, string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(newPassword))
+                throw new InvalidOperationException("Email and new password are required");
+
+            var normalizedEmail = NormalizeEmail(email);
+            var verifiedKey = $"{PasswordVerifiedPrefix}{normalizedEmail}";
+
+            if (!_cache.TryGetValue(verifiedKey, out bool verified) || !verified)
+                throw new InvalidOperationException("OTP verification is required");
+
+            var user = await _unitOfWork.Users.Query().FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+            if (user == null)
+                throw new InvalidOperationException("User not found");
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+
+            _unitOfWork.Users.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            _cache.Remove(verifiedKey);
 
             return true;
         }

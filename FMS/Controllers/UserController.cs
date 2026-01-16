@@ -94,7 +94,7 @@ namespace FMS.Controllers
         {
             try
             {
-                var otp = await _userService.SendRegistrationOtpAsync(dto.Email);
+                var otp = await _userService.SendRegistrationOtpAsync(dto.Email, dto.Purpose);
                 return Ok(new
                 {
                     message = "Verification code sent to email.",
@@ -117,7 +117,7 @@ namespace FMS.Controllers
         {
             try
             {
-                await _userService.VerifyRegistrationOtpAsync(dto.Email, dto.Otp);
+                await _userService.VerifyRegistrationOtpAsync(dto.Email, dto.Otp, dto.Purpose);
                 return Ok(new { message = "Email verified successfully." });
             }
             catch (InvalidOperationException ex)
@@ -172,6 +172,25 @@ namespace FMS.Controllers
             {
                 await _userService.ResetPasswordAsync(dto.Email, dto.Otp, dto.NewPassword);
                 return Ok(new { message = "Password reset successfully" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // POST: api/user/change-password
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            try
+            {
+                await _userService.ChangePasswordWithOtpAsync(dto.Email, dto.NewPassword);
+                return Ok(new { message = "Password updated successfully" });
             }
             catch (InvalidOperationException ex)
             {
