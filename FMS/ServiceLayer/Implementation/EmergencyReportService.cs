@@ -22,6 +22,7 @@ namespace FMS.ServiceLayer.Implementation
             var query = _unitOfWork.EmergencyReports.Query()
                 .Include(e => e.Vehicle)
                 .Include(e => e.Driver)
+                    .ThenInclude(d => d.User)
                 .AsNoTracking(); // Tăng hiệu năng cho query chỉ đọc
 
 
@@ -59,8 +60,8 @@ namespace FMS.ServiceLayer.Implementation
                 Desc = e.Description,
                 Location = e.Location,
                 Contact = e.ContactPhone,
-                Reporter = e.Driver != null ? e.Driver.FullName : "Không xác định",
-                Driver = e.Driver != null ? e.Driver.FullName : "-",
+                Reporter = e.Driver != null ? e.Driver.User.FullName : "Không xác định",
+                Driver = e.Driver != null ? e.Driver.User.FullName : "-",
                 Vehicle = e.Vehicle != null ? e.Vehicle.LicensePlate + " - " + e.Vehicle.VehicleType : "-",
                 ReportedAt = e.ReportedAt.ToString("HH:mm:ss dd/MM/yyyy"),
                 RespondedAt = e.RespondedAt == null ? null : e.RespondedAt.Value.ToString("HH:mm:ss dd/MM/yyyy"),
@@ -152,8 +153,8 @@ namespace FMS.ServiceLayer.Implementation
                 Location = report.Location,
                 Contact = report.ContactPhone,
 
-                Reporter = activeDriver != null ? activeDriver.FullName : "Không xác định",
-                Driver = activeDriver != null ? activeDriver.FullName : "-",
+                Reporter = activeDriver != null ? activeDriver.User.FullName : "Không xác định",
+                Driver = activeDriver != null ? activeDriver.User.FullName : "-",
 
                 Vehicle = report.Vehicle != null
                     ? report.Vehicle.LicensePlate + " - " + report.Vehicle.VehicleType
@@ -174,6 +175,7 @@ namespace FMS.ServiceLayer.Implementation
                 .Query()
                 .Include(e => e.Vehicle)
                 .Include(e => e.Driver)
+                    .ThenInclude(d => d.User)
                 .FirstOrDefaultAsync(e => e.EmergencyID == dto.EmergencyID);
 
             if (report == null)
@@ -200,8 +202,8 @@ namespace FMS.ServiceLayer.Implementation
                 Location = report.Location,
                 Contact = report.ContactPhone,
 
-                Reporter = report.Driver != null ? report.Driver.FullName : "Không xác định",
-                Driver = report.Driver != null ? report.Driver.FullName : "-",
+                Reporter = report.Driver != null ? report.Driver.User.FullName : "Không xác định",
+                Driver = report.Driver != null ? report.Driver.User.FullName : "-",
 
                 Vehicle = report.Vehicle != null
                     ? report.Vehicle.LicensePlate + " - " + report.Vehicle.VehicleType

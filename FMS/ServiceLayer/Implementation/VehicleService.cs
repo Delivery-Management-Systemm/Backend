@@ -136,6 +136,7 @@ namespace FMS.ServiceLayer.Implementation
                 .Include(v => v.Trips)
                     .ThenInclude(t => t.TripDrivers)
                     .ThenInclude(t => t.Driver) // Để lấy tên tài xế cho từng chuyến đi
+                    .ThenInclude(d => d.User)
                 .Include(v => v.Maintenances)
                 .FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
 
@@ -154,7 +155,7 @@ namespace FMS.ServiceLayer.Implementation
                 Capacity = vehicle.Capacity ?? "N/A",
 
                 AssignedDriverId = vehicle.DriverID?.ToString(),
-                AssignedDriverName = vehicle.Driver?.FullName,
+                AssignedDriverName = vehicle.Driver?.User.FullName,
 
                 // Map Lịch sử chuyến đi
                 Trips = vehicle.Trips?.Select(t => new VehicleTripDto
@@ -166,7 +167,7 @@ namespace FMS.ServiceLayer.Implementation
                     StartDate = t.StartTime,
                     Distance = t.TotalDistanceKm,
                     DriverName = t.TripDrivers
-                            .Select(td => td.Driver?.FullName) // Chọn ra danh sách các FullName
+                            .Select(td => td.Driver?.User.FullName) // Chọn ra danh sách các FullName
                             .FirstOrDefault() ?? "N/A"         // Lấy cái đầu tiên, nếu không có thì trả về N/A
                 }).ToList() ?? new(),
 

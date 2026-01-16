@@ -166,6 +166,13 @@ namespace FMS.Models
                         .HasForeignKey(e => e.TripID)
                         .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<User>()
+                        .HasOne(u => u.Driver)
+                        .WithOne(d => d.User)
+                        .HasForeignKey<Driver>(d => d.UserID)
+                        .OnDelete(DeleteBehavior.Cascade);
+
+
             //index
             modelBuilder.Entity<Trip>()
                 .HasIndex(t => t.StartTime);
@@ -188,6 +195,8 @@ namespace FMS.Models
             modelBuilder.Entity<DriverLicense>()
                 .HasIndex(dl => new { dl.DriverID, dl.LicenseClassID })
                 .IsUnique();
+
+
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FMS.Models
 {
@@ -6,9 +7,13 @@ namespace FMS.Models
     {
         [Key] public int DriverID { get; set; }
 
-        [Required, StringLength(200)] public string FullName { get; set; }
-        [StringLength(20)] public string Phone { get; set; }
-        [StringLength(100)] public string Email { get; set; }
+        [ForeignKey(nameof(User))]
+        public int UserID { get; set; }
+        public User User { get; set; }
+
+        //[Required, StringLength(200)] public string FullName { get; set; }
+        //[StringLength(20)] public string Phone { get; set; }
+        //[StringLength(100)] public string Email { get; set; }
         [StringLength(100)] public string BirthPlace { get; set; }
 
         public int TotalTrips { get; set; }
