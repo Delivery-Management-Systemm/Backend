@@ -1,5 +1,6 @@
 ﻿using FMS.DAL.Interfaces;
 using FMS.Models;
+using FMS.ServiceLayer.DTO.AssignmentDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,68 +15,124 @@ namespace FMS.ServiceLayer.Implementation
             _unitOfWork = unitOfWork;
         }
 
-        public async Task AssignVehicleAndDriverAsync(int tripId)
+
+        public async Task<List<SuitableVehicleDto>> GetAvailableVehiclesForTripAsync(int tripId)
         {
             // 1. Lấy trip
             var trip = await _unitOfWork.Trips.Query()
-                .Include(t => t.TripDrivers)
                 .FirstOrDefaultAsync(t => t.TripID == tripId);
 
             if (trip == null)
                 throw new Exception("Trip not found");
 
-            if (trip.TripStatus != "Planned")
+            if (trip.TripStatus != "planned")
                 throw new Exception("Trip is not in Planned status");
 
-            // 2. Chọn VEHICLE phù hợp
-            var vehicle = await _unitOfWork.Vehicles.Query()
+            // 2. Lấy danh sách VEHICLE phù hợp
+            var vehicles = await _unitOfWork.Vehicles.Query()
                 .Include(v => v.RequiredLicenseClass)
                 .Where(v =>
-                    v.VehicleStatus == "available" //&&
-                    //v.VehicleType == trip.RequestedVehicleType
+                    v.VehicleStatus == "available"
+                // && v.VehicleType == trip.RequestedVehicleType
                 )
-                //.OrderBy(v => v.CurrentKm) // ưu tiên xe chạy ít
-                .FirstOrDefaultAsync();
+                //.OrderBy(v => v.CurrentKm) // optional
+                .ToListAsync();
+
+            return new List<SuitableVehicleDto>(vehicles.Select(v => new SuitableVehicleDto
+            {
+                VehicleId = v.VehicleID,
+                LicensePlate = v.LicensePlate,
+                Model = v.VehicleModel,
+                Brand = v.VehicleBrand,
+                Type = v.VehicleType
+            }));
+        }
+
+
+        public async Task<List<SuitableDriverDto>> GetAvailableDriversForVehicleAsync(int vehicleId)
+        {
+            var vehicle = await _unitOfWork.Vehicles.Query()
+                .Include(v => v.RequiredLicenseClass)
+                .FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
 
             if (vehicle == null)
-                throw new Exception("No suitable vehicle found");
+                throw new Exception("Vehicle not found");
 
-            // 3. Chọn DRIVER phù hợp với xe
+           return new List<SuitableDriverDto>(
+                await _unitOfWork.Drivers.Query()
+                    .Include(d => d.User)
+                    .Include(d => d.DriverLicenses)
+                        .ThenInclude(dl => dl.LicenseClass)
+                    .Where(d =>
+                        d.DriverStatus == "available" &&
+                        d.DriverLicenses.Any(dl =>
+                            dl.ExpiryDate > DateTime.Now &&
+                            dl.LicenseClass.Rank >= vehicle.RequiredLicenseClass.Rank
+                        )
+                    )
+                    //.OrderBy(d => d.TotalTrips) // optional
+                    .Select(d => new SuitableDriverDto
+                    {
+                        DriverId = d.DriverID,
+                        FullName = d.User.FullName,
+                        Licenses = string.Join(", ",
+                            d.DriverLicenses
+                                .Where(dl => dl.ExpiryDate > DateTime.Now)
+                                .Select(dl => dl.LicenseClass.Code))
+                                })
+                    .ToListAsync()
+            );
+        }
+        public async Task AssignVehicleAndDriverAsync(int tripId,int vehicleId,int driverId)
+        {
+            var trip = await _unitOfWork.Trips.Query()
+                .Include(t => t.TripDrivers)
+                .FirstOrDefaultAsync(t => t.TripID == tripId);
+
+            if (trip == null) throw new Exception("Trip not found");
+
+            var vehicle = await _unitOfWork.Vehicles.Query()
+                .Include(v => v.RequiredLicenseClass)
+                .FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
+
             var driver = await _unitOfWork.Drivers.Query()
                 .Include(d => d.DriverLicenses)
                     .ThenInclude(dl => dl.LicenseClass)
-                .Where(d =>
-                    d.DriverStatus == "available" &&
-                    d.DriverLicenses.Any(dl =>
-                        dl.ExpiryDate > DateTime.Now &&
-                        dl.LicenseClass.Rank >= vehicle.RequiredLicenseClass.Rank
-                    )
-                )
-                //.OrderBy(d => d.TotalTrips) // ưu tiên driver ít trip
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(d => d.DriverID == driverId);
 
-            if (driver == null)
-                throw new Exception("No suitable driver found");
+            // ===== VALIDATION =====
+            if (vehicle.VehicleStatus != "available")
+                throw new Exception("Vehicle not available");
 
-            // 4. GÁN VEHICLE & DRIVER
+            if (driver.DriverStatus != "available")
+                throw new Exception("Driver not available");
+
+            var validLicense = driver.DriverLicenses.Any(dl =>
+                dl.ExpiryDate > DateTime.Now &&
+                dl.LicenseClass.Rank >= vehicle.RequiredLicenseClass.Rank
+            );
+
+            if (!validLicense)
+                throw new Exception("Driver license not suitable");
+
+            // ===== ASSIGN =====
             trip.VehicleID = vehicle.VehicleID;
             trip.TripStatus = "confirmed";
 
-            var tripDriver = new TripDriver
+            await _unitOfWork.TripDrivers.AddAsync(new TripDriver
             {
                 TripID = trip.TripID,
                 DriverID = driver.DriverID,
                 Role = "Main Driver",
                 AssignedFrom = DateTime.Now
-            };
+            });
 
-            await _unitOfWork.TripDrivers.AddAsync(tripDriver);
-
-            // 5. UPDATE trạng thái
             vehicle.VehicleStatus = "in_use";
             driver.DriverStatus = "on_trip";
 
             await _unitOfWork.SaveChangesAsync();
         }
+
+
     }
 }
