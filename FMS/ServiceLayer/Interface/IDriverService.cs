@@ -1,4 +1,5 @@
-﻿using FMS.Pagination;
+﻿using FMS.Models;
+using FMS.Pagination;
 using FMS.ServiceLayer.DTO.DriverDto;
 
 namespace FMS.ServiceLayer.Interface
@@ -8,7 +9,8 @@ namespace FMS.ServiceLayer.Interface
         Task<PaginatedResult<DriverListDto>> GetDriversAsync(DriverParams @params);
         Task<List<DriverHistoryDto>> GetDriverHistoryAsync(int driverId);
         Task<DriverDetailsDto> GetDriverDetailsAsync(int driverId);
-        //Task<DriverDetailsDto> CreateDriverAsync(CreateDriverDto dto);
+        Task<Driver> CreateDriverAsync(int userId, CreateDriverDto dto);
+        Task<DriverDetailsDto> RegisterDriverAsync(RegisterDriverDto dto);
         Task UpdateDriverRatingAsync(int driverId);
         Task<bool> UpdateDriverAsync(int driverId, UpdateDriverDto dto);
         Task<bool> DeleteDriverAsync(int driverId);
