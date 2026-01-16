@@ -23,5 +23,8 @@ namespace FMS.Models
         public bool IsReceivingMaintainNofication { get; set; } = false;
         public bool IsReceivingGeoNofication { get; set; } = false;
         public bool IsReceivingReportNofication { get; set; } = false;
+
+        // Navigation
+        public Driver? Driver { get; set; }
     }
 }
