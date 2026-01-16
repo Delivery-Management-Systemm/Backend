@@ -15,7 +15,8 @@ namespace FMS.ServiceLayer.Interface
         Task<bool> DeleteAccountAsync(int userId);
         Task<bool> ForgotPasswordAsync(string email);
         Task<bool> ResetPasswordAsync(string email, string otp, string newPassword);
-        Task<string> SendRegistrationOtpAsync(string email);
-        Task<bool> VerifyRegistrationOtpAsync(string email, string otp);
+        Task<string> SendRegistrationOtpAsync(string email, string purpose = "register");
+        Task<bool> VerifyRegistrationOtpAsync(string email, string otp, string purpose = "register");
+        Task<bool> ChangePasswordWithOtpAsync(string email, string newPassword);
     }
 }
