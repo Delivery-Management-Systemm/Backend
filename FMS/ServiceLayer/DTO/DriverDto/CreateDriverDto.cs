@@ -12,7 +12,7 @@ namespace FMS.ServiceLayer.DTO.DriverDto
         public int ExperienceYears { get; set; }
         public List<CreateDriverLicenseDto> Licenses { get; set; }
         // Trạng thái: "Sẵn sàng", "Đang lái", "Nghỉ phép"...
-        [StringLength(20)] public string DriverStatus { get; set; } = "Sẵn sàng";
+        [StringLength(20)] public string DriverStatus { get; set; } = "available";
 
     }
 }
