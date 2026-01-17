@@ -1,4 +1,6 @@
-﻿using FMS.DAL.Interfaces;
+﻿using CloudinaryDotNet.Actions;
+using CloudinaryDotNet;
+using FMS.DAL.Interfaces;
 using FMS.Models;
 using FMS.Pagination;
 using FMS.ServiceLayer.DTO.UserDto;
@@ -19,18 +21,20 @@ namespace FMS.ServiceLayer.Implementation
         private readonly IMemoryCache _cache;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly CloudinaryService _cloudinary;
         private const string RegistrationOtpPrefix = "register_otp_";
         private const string RegistrationVerifiedPrefix = "register_verified_";
         private const string ProfileOtpPrefix = "profile_otp_";
         private const string ProfileVerifiedPrefix = "profile_verified_";
         private const string PasswordOtpPrefix = "password_otp_";
         private const string PasswordVerifiedPrefix = "password_verified_";
-        public UserService(IUnitOfWork unitOfWork, IMemoryCache cache, IEmailService emailService, IConfiguration configuration)
+        public UserService(IUnitOfWork unitOfWork, IMemoryCache cache, IEmailService emailService, IConfiguration configuration,CloudinaryService cloudinary)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _cloudinary = cloudinary ?? throw new ArgumentNullException(nameof(cloudinary));
         }
 
         private static string NormalizeEmail(string email)
@@ -372,5 +376,38 @@ namespace FMS.ServiceLayer.Implementation
 
             return true;
         }
+
+        public async Task<bool> UploadAndSetAvatarAsync(int userId, IFormFile file)
+        {
+            var user = await GetByIdAsync(userId);
+            if (user == null)
+                throw new InvalidOperationException("User not found");
+
+            if (file == null || file.Length == 0)
+                throw new InvalidOperationException("File is required");
+
+            using var stream = file.OpenReadStream();
+            var uploadParams = new ImageUploadParams()
+            {
+                File = new FileDescription(file.FileName, stream),
+                Folder = "avatars",
+                Transformation = new Transformation()
+                                    .Width(300)
+                                    .Height(300)
+                                    .Crop("fill")
+                                    .Gravity("face")
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            user.Avatar = uploadResult.SecureUrl.ToString();
+
+            _unitOfWork.Users.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
+        }
+
+
     }
 }
