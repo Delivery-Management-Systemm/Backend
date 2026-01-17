@@ -7,8 +7,13 @@ namespace FMS.Models
     {
         [Key] public int UserID { get; set; }
         [StringLength(200)] public string? Email { get; set; }
+<<<<<<< HEAD
         [StringLength(200)] public string? FullName { get; set; }
         [StringLength(20)] public string? Phone { get; set; }
+=======
+        [Required, StringLength(200)] public string FullName { get; set; }
+        [StringLength(20)] public string Phone { get; set; }
+>>>>>>> 7066ecf82eaeeb50449e3ff0bb4fa011e46450de
         public DateTime RegisteredAt { get; set; }
         [StringLength(200)] public string? PasswordHash { get; set; }
 
