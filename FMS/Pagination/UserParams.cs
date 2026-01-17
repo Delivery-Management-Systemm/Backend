@@ -9,5 +9,6 @@
 
         // Các tiêu chí lọc
         public string? Role { get; set; }
+        public string? Keyword { get; set; }
     }
 }

@@ -30,7 +30,7 @@ namespace FMS.Controllers
             var stats = await _tripService.GetTripStatsAsync();
             return Ok(stats);
         }
-        [HttpGet("/{tripId}/orders")]
+        [HttpGet("{tripId}/orders")]
         public async Task<IActionResult> GetOrdersAsync(int tripId)
         {
             var order = await _tripService.GetOrdersByIdAsync(tripId);
@@ -54,6 +54,36 @@ namespace FMS.Controllers
         {
             var createdTrip = await _tripService.CreateBookingTripAsync(dto);
             return Ok(createdTrip);
+        }
+
+        // GET: api/trip/options/statuses
+        [HttpGet("options/statuses")]
+        public IActionResult GetTripStatuses()
+        {
+            var statuses = new[]
+            {
+                new { value = "waiting", label = "Chờ xử lý" },
+                new { value = "confirmed", label = "Đã xác nhận" },
+                new { value = "in_transit", label = "Đang thực hiện" },
+                new { value = "completed", label = "Hoàn thành" }
+            };
+            return Ok(statuses);
+        }
+
+        // PUT: api/trip/booked/{tripId}/cancel
+        [HttpPut("booked/{tripId}/cancel")]
+        public async Task<IActionResult> CancelBookedTrip(int tripId)
+        {
+            var result = await _tripService.CancelBookedTripAsync(tripId);
+            return result ? Ok(new { message = "Đã hủy lịch đặt trước" }) : NotFound(new { message = "Không tìm thấy lịch đặt trước" });
+        }
+
+        // DELETE: api/trip/booked/{tripId}
+        [HttpDelete("booked/{tripId}")]
+        public async Task<IActionResult> DeleteBookedTrip(int tripId)
+        {
+            var result = await _tripService.DeleteBookedTripAsync(tripId);
+            return result ? Ok(new { message = "Đã xóa lịch đặt trước" }) : NotFound(new { message = "Không tìm thấy lịch đặt trước" });
         }
     }
 }

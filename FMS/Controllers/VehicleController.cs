@@ -99,8 +99,7 @@ namespace FMS.Controllers
             {
                 new { value = "available", label = "Sẵn sàng" },
                 new { value = "in_use", label = "Đang dùng" },
-                new { value = "maintenance", label = "Bảo trì" },
-                new { value = "on_trip", label = "Đang chạy" }
+                new { value = "maintenance", label = "Bảo trì" }
             };
             return Ok(statuses);
         }

@@ -35,16 +35,56 @@ namespace FMS.ServiceLayer.Implementation
                     .ThenInclude(ms => ms.Service)
                 .AsNoTracking();
 
+            // Lọc theo Keyword (mã hóa đơn hoặc tên KTV)
+            if (!string.IsNullOrEmpty(@params.Keyword))
+            {
+                var keyword = @params.Keyword.ToLower();
+                query = query.Where(m => 
+                    m.MaintenanceID.ToString().Contains(@params.Keyword) ||
+                    (m.TechnicianName != null && m.TechnicianName.ToLower().Contains(keyword))
+                );
+            }
 
+            // Lọc theo MaintenanceStatus
             if (!string.IsNullOrEmpty(@params.MaintenanceStatus))
             {
                 query = query.Where(e => e.MaintenanceStatus == @params.MaintenanceStatus);
             }
 
-            // Lọc theo Level (ví dụ: "high")
+            // Lọc theo MaintenanceType
             if (!string.IsNullOrEmpty(@params.MaintenanceType))
             {
                 query = query.Where(e => e.MaintenanceType == @params.MaintenanceType);
+            }
+
+            // Lọc theo ngày
+            if (@params.Day.HasValue && @params.Day.Value > 0)
+            {
+                query = query.Where(m => m.ScheduledDate.Day == @params.Day.Value);
+            }
+
+            // Lọc theo tháng
+            if (@params.Month.HasValue && @params.Month.Value > 0)
+            {
+                query = query.Where(m => m.ScheduledDate.Month == @params.Month.Value);
+            }
+
+            // Lọc theo năm
+            if (@params.Year.HasValue && @params.Year.Value > 0)
+            {
+                query = query.Where(m => m.ScheduledDate.Year == @params.Year.Value);
+            }
+
+            // Lọc theo tổng tiền tối thiểu
+            if (@params.MinAmount.HasValue && @params.MinAmount.Value > 0)
+            {
+                query = query.Where(m => m.TotalCost >= (double)@params.MinAmount.Value);
+            }
+
+            // Lọc theo tổng tiền tối đa
+            if (@params.MaxAmount.HasValue && @params.MaxAmount.Value > 0)
+            {
+                query = query.Where(m => m.TotalCost <= (double)@params.MaxAmount.Value);
             }
 
             // 1. Xử lý Dynamic Sorting

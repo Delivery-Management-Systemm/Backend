@@ -115,6 +115,19 @@ namespace FMS.ServiceLayer.Implementation
             var query = _unitOfWork.Users.Query().AsNoTracking();
 
             // --- BƯỚC 1: LỌC (FILTERING) ---
+            
+            // Lọc theo Keyword (tên, email, SĐT)
+            if (!string.IsNullOrEmpty(@params.Keyword))
+            {
+                var keyword = @params.Keyword.ToLower();
+                query = query.Where(u => 
+                    (u.FullName != null && u.FullName.ToLower().Contains(keyword)) ||
+                    (u.Email != null && u.Email.ToLower().Contains(keyword)) ||
+                    (u.Phone != null && u.Phone.Contains(@params.Keyword))
+                );
+            }
+            
+            // Lọc theo Role
             if (!string.IsNullOrEmpty(@params.Role))
             {
                 query = query.Where(u => u.Role == @params.Role);
