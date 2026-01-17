@@ -9,5 +9,13 @@
 
         // Các tiêu chí lọc
         public string? TripStatus { get; set; }
+        
+        // Search keyword (vehicle license plate or driver name)
+        public string? Keyword { get; set; }
+        
+        // Date filters
+        public int? Day { get; set; }
+        public int? Month { get; set; }
+        public int? Year { get; set; }
     }
 }

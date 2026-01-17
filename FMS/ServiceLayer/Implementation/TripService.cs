@@ -21,9 +21,38 @@ namespace FMS.ServiceLayer.Implementation
             var query = _unitOfWork.Trips.Query().AsNoTracking();
 
             // --- BƯỚC 1: LỌC (FILTERING) ---
+            // ALWAYS exclude "Planned" trips (they are shown in Bookings page)
+            query = query.Where(t => t.TripStatus != "Planned" && t.TripStatus != "planned");
+
             if (!string.IsNullOrEmpty(@params.TripStatus))
             {
                 query = query.Where(t => t.TripStatus == @params.TripStatus);
+            }
+
+            // Keyword search: vehicle license plate or driver name
+            if (!string.IsNullOrEmpty(@params.Keyword))
+            {
+                var keyword = @params.Keyword.Trim().ToLowerInvariant();
+                query = query.Where(t => 
+                    t.Vehicle.LicensePlate.ToLower().Contains(keyword) ||
+                    t.TripDrivers.Any(td => td.Driver.User.FullName.ToLower().Contains(keyword))
+                );
+            }
+
+            // Date filters
+            if (@params.Day.HasValue)
+            {
+                query = query.Where(t => t.StartTime.Day == @params.Day.Value);
+            }
+
+            if (@params.Month.HasValue)
+            {
+                query = query.Where(t => t.StartTime.Month == @params.Month.Value);
+            }
+
+            if (@params.Year.HasValue)
+            {
+                query = query.Where(t => t.StartTime.Year == @params.Year.Value);
             }
 
             // --- BƯỚC 2: SẮP XẾP (SORTING) ---
@@ -110,7 +139,7 @@ namespace FMS.ServiceLayer.Implementation
 
         public async Task<OrderListDto> GetOrdersByIdAsync(int tripId)
         {
-            if (tripId == null)
+            if (tripId <= 0)
                 throw new ArgumentException("Trip id not found");
             var trip = await _unitOfWork.Trips.Query()
                                         .Include(t => t.Vehicle)
@@ -158,7 +187,33 @@ namespace FMS.ServiceLayer.Implementation
             var query =  _unitOfWork.Trips.Query()
                 .Where(t => t.ScheduledStartTime != null && t.TripStatus == "Planned").AsNoTracking();
 
+            // --- BƯỚC 1: LỌC (FILTERING) ---
+            // Keyword search: customer name, phone, or email
+            if (!string.IsNullOrEmpty(@params.Keyword))
+            {
+                var keyword = @params.Keyword.Trim().ToLowerInvariant();
+                query = query.Where(t => 
+                    t.CustomerName.ToLower().Contains(keyword) ||
+                    t.CustomerPhone.ToLower().Contains(keyword) ||
+                    (t.CustomerEmail != null && t.CustomerEmail.ToLower().Contains(keyword))
+                );
+            }
 
+            // Date filters
+            if (@params.Day.HasValue)
+            {
+                query = query.Where(t => t.ScheduledStartTime.Value.Day == @params.Day.Value);
+            }
+
+            if (@params.Month.HasValue)
+            {
+                query = query.Where(t => t.ScheduledStartTime.Value.Month == @params.Month.Value);
+            }
+
+            if (@params.Year.HasValue)
+            {
+                query = query.Where(t => t.ScheduledStartTime.Value.Year == @params.Year.Value);
+            }
 
             // --- BƯỚC 2: SẮP XẾP (SORTING) ---
             // Lưu ý: Sửa lại các case cho khớp với ToLower()
@@ -256,5 +311,25 @@ namespace FMS.ServiceLayer.Implementation
             return trip;
         }
 
+        public async Task<bool> CancelBookedTripAsync(int tripId)
+        {
+            var trip = await _unitOfWork.Trips.GetByIdAsync(tripId);
+            if (trip == null || trip.TripStatus != "Planned") return false;
+
+            trip.TripStatus = "Cancelled";
+            _unitOfWork.Trips.Update(trip);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteBookedTripAsync(int tripId)
+        {
+            var trip = await _unitOfWork.Trips.GetByIdAsync(tripId);
+            if (trip == null || trip.TripStatus != "Planned") return false;
+
+            _unitOfWork.Trips.Remove(trip);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
     }
 }

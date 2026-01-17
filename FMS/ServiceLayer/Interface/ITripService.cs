@@ -13,6 +13,8 @@ namespace FMS.ServiceLayer.Interface
         Task<BookedTripStatsDto> GetBookedTripStatsAsync();
 
         Task<Trip> CreateBookingTripAsync(CreateBookingTripDto dto);
+        Task<bool> CancelBookedTripAsync(int tripId);
+        Task<bool> DeleteBookedTripAsync(int tripId);
 
     }
 }

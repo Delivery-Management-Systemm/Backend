@@ -13,5 +13,7 @@
         public string? VehicleBrand { get; set; }
         public string? VehicleStatus { get; set; }
         
+        // Search keyword (license plate)
+        public string? Keyword { get; set; }
     }
 }

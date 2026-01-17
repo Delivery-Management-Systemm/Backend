@@ -88,6 +88,12 @@ namespace FMS.ServiceLayer.Implementation
                 query = query.Where(v => v.VehicleStatus == @params.VehicleStatus);
             }
 
+            if (!string.IsNullOrEmpty(@params.Keyword))
+            {
+                var keyword = @params.Keyword.Trim().ToLowerInvariant();
+                query = query.Where(v => v.LicensePlate.ToLower().Contains(keyword));
+            }
+
             // --- BƯỚC 2: SẮP XẾP (SORTING) ---
             if (!string.IsNullOrEmpty(@params.SortBy))
             {

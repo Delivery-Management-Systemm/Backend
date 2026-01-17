@@ -29,13 +29,48 @@ namespace FMS.ServiceLayer.Implementation
                 .Include(d => d.User)
                 .AsNoTracking(); // Tăng hiệu năng cho query chỉ đọc
 
-
+            // Filter by status
             if (!string.IsNullOrEmpty(@params.DriverStatus))
             {
                 query = query.Where(e => e.DriverStatus == @params.DriverStatus);
             }
 
+            // Search by keyword (name, phone, email)
+            if (!string.IsNullOrEmpty(@params.Keyword))
+            {
+                var keyword = @params.Keyword.ToLower();
+                query = query.Where(d => 
+                    (d.User.FullName != null && d.User.FullName.ToLower().Contains(keyword)) ||
+                    (d.User.Phone != null && d.User.Phone.ToLower().Contains(keyword)) ||
+                    (d.User.Email != null && d.User.Email.ToLower().Contains(keyword))
+                );
+            }
 
+            // Filter by rating range
+            if (@params.MinRating.HasValue)
+            {
+                query = query.Where(d => d.Rating != null && d.Rating >= @params.MinRating.Value);
+            }
+            if (@params.MaxRating.HasValue)
+            {
+                query = query.Where(d => d.Rating != null && d.Rating <= @params.MaxRating.Value);
+            }
+
+            // Filter by experience years range
+            if (@params.MinExperienceYears.HasValue)
+            {
+                query = query.Where(d => d.ExperienceYears != null && d.ExperienceYears >= @params.MinExperienceYears.Value);
+            }
+            if (@params.MaxExperienceYears.HasValue)
+            {
+                query = query.Where(d => d.ExperienceYears != null && d.ExperienceYears <= @params.MaxExperienceYears.Value);
+            }
+
+            // Filter by license class
+            if (!string.IsNullOrEmpty(@params.LicenseClass))
+            {
+                query = query.Where(d => d.DriverLicenses.Any(dl => dl.LicenseClass.Code == @params.LicenseClass));
+            }
 
             // 1. Xử lý Dynamic Sorting
             if (!string.IsNullOrEmpty(@params.SortBy))
