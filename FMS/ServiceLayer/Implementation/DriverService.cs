@@ -57,6 +57,7 @@ namespace FMS.ServiceLayer.Implementation
                 {
                     DriverID = d.DriverID,
                     Name = d.User.FullName,
+                    Avatar = d.User.Avatar,
                     Phone = d.User.Phone,
                     Email = d.User.Email,
                     ExperienceYears = d.ExperienceYears,
