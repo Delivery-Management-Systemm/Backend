@@ -99,6 +99,8 @@ builder.Services.AddScoped<IEmergencyReportService, EmergencyReportService>();
 builder.Services.AddScoped<IMaintenanceService, FMS.ServiceLayer.Implementation.MaintenanceService>();
 builder.Services.AddScoped<IFuelRecordService, FMS.ServiceLayer.Implementation.FuelRecordService>();
 builder.Services.AddScoped<ITripAssignmentService, TripAssignmentService>();
+builder.Services.AddSingleton<CloudinaryService>();
+
 
 
 builder.Services.AddSwaggerGen(c =>
