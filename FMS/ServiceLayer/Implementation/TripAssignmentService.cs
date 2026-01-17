@@ -16,17 +16,9 @@ namespace FMS.ServiceLayer.Implementation
         }
 
 
-        public async Task<List<SuitableVehicleDto>> GetAvailableVehiclesForTripAsync(int tripId)
+        public async Task<List<SuitableVehicleDto>> GetAvailableVehiclesForTripAsync()
         {
-            // 1. Lấy trip
-            var trip = await _unitOfWork.Trips.Query()
-                .FirstOrDefaultAsync(t => t.TripID == tripId);
-
-            if (trip == null)
-                throw new Exception("Trip not found");
-
-            if (trip.TripStatus != "planned")
-                throw new Exception("Trip is not in Planned status");
+            
 
             // 2. Lấy danh sách VEHICLE phù hợp
             var vehicles = await _unitOfWork.Vehicles.Query()

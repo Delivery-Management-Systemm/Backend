@@ -36,15 +36,19 @@ namespace FMS.ServiceLayer.Implementation
             }
             System.Console.WriteLine(ton);System.Console.WriteLine(seats);
             System.Console.WriteLine(vehicleType);
+
             // Mapping rules
-            if (vehicleType.Contains("xe con") || vehicleType.Contains("bán tải"))
-                return 7; // B
-            if (vehicleType.Contains("xe tải nhỏ") && ton >= 3.5 && ton <= 7.5)
-                return 8; // C1
-            if (vehicleType.Contains("xe tải lớn") && ton > 7.5)
-                return 9; // C
             if (vehicleType.Contains("container"))
                 return 15; // CE
+            if (vehicleType.Contains("xe tải lớn") && ton > 7.5)
+                return 9; // C
+            if (vehicleType.Contains("xe tải nhỏ") && ton >= 3.5 && ton <= 7.5)
+                return 8; // C1
+            if (vehicleType.Contains("xe con") || vehicleType.Contains("bán tải"))
+                return 7; // B
+            
+            
+            
             if (vehicleType.Contains("xe khách"))
             {
                 if (seats <= 16)
