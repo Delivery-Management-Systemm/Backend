@@ -14,9 +14,9 @@ namespace FMS.Controllers
         }
 
         [HttpGet("{tripId}/available-vehicles")]
-        public async Task<IActionResult> GetAvailableVehiclesForTripAsync(int tripId)
+        public async Task<IActionResult> GetAvailableVehiclesForTripAsync()
         {
-            var vehicles = await _tripAssignmentService.GetAvailableVehiclesForTripAsync(tripId);
+            var vehicles = await _tripAssignmentService.GetAvailableVehiclesForTripAsync();
             return Ok(vehicles);
         }
 

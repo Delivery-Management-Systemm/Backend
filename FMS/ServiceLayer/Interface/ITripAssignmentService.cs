@@ -5,7 +5,7 @@ namespace FMS.ServiceLayer.Interface
 {
     public interface ITripAssignmentService
     {
-        Task<List<SuitableVehicleDto>> GetAvailableVehiclesForTripAsync(int tripId);
+        Task<List<SuitableVehicleDto>> GetAvailableVehiclesForTripAsync();
         Task<List<SuitableDriverDto>> GetAvailableDriversForVehicleAsync(int vehicleId);
         Task AssignVehicleAndDriverAsync(
             int tripId,
