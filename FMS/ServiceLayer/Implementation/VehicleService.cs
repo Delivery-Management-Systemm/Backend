@@ -46,7 +46,7 @@ namespace FMS.ServiceLayer.Implementation
                 return 8; // C1
             if (vehicleType.Contains("xe con") || vehicleType.Contains("bán tải"))
                 return 7; // B
-            
+         
             
             
             if (vehicleType.Contains("xe khách"))
