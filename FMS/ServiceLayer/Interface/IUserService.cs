@@ -18,5 +18,6 @@ namespace FMS.ServiceLayer.Interface
         Task<string> SendRegistrationOtpAsync(string email, string purpose = "register");
         Task<bool> VerifyRegistrationOtpAsync(string email, string otp, string purpose = "register");
         Task<bool> ChangePasswordWithOtpAsync(string email, string newPassword);
+        Task<bool> UploadAndSetAvatarAsync(int userId, IFormFile file);
     }
 }

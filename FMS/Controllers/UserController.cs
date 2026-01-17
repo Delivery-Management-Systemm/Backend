@@ -1,6 +1,7 @@
 ﻿using FMS.Models;
 using FMS.Pagination;
 using FMS.ServiceLayer.DTO.UserDto;
+using FMS.ServiceLayer.Implementation;
 using FMS.ServiceLayer.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
@@ -267,5 +268,30 @@ namespace FMS.Controllers
             return Ok(departments);
         }
 
+        // POST: api/avatar/upload/{userId}
+        [HttpPost("upload/{userId}")]
+        public async Task<IActionResult> UploadAvatar(int userId, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("File is required");
+            }
+
+            try
+            {
+                var success = await _userService.UploadAndSetAvatarAsync(userId, file);
+
+                if (!success)
+                    return BadRequest("Upload failed");
+
+                return Ok(new { message = "Avatar updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
     }
 }
+
