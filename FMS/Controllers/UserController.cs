@@ -82,7 +82,6 @@ namespace FMS.Controllers
                     Email = request.Email,
                     BirthPlace = request.BirthPlace,
                     BirthDate = request.BirthDate
-
                 };
 
                 var registeredUser = await _userService.RegisterAsync(user, request.Password);
@@ -146,6 +145,11 @@ namespace FMS.Controllers
             }
             catch (InvalidOperationException ex)
             {
+                if (ex.Message == "FIRST_LOGIN_OTP_REQUIRED" ||
+                    ex.Message == "FIRST_LOGIN_EMAIL_REQUIRED")
+                {
+                    return StatusCode(403, new { error = ex.Message });
+                }
                 return Unauthorized(ex.Message);
             }
         }
@@ -175,8 +179,17 @@ namespace FMS.Controllers
         {
             try
             {
-                await _userService.ResetPasswordAsync(dto.Email, dto.Otp, dto.NewPassword);
-                return Ok(new { message = "Password reset successfully" });
+                var (user, token) = await _userService.ResetPasswordAsync(
+                    dto.Email,
+                    dto.Otp,
+                    dto.NewPassword
+                );
+                return Ok(new
+                {
+                    message = "Password reset successfully",
+                    user,
+                    token
+                });
             }
             catch (InvalidOperationException ex)
             {
@@ -331,4 +344,6 @@ namespace FMS.Controllers
 
     }
 }
+
+
 
