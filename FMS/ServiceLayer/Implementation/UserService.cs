@@ -390,7 +390,7 @@ namespace FMS.ServiceLayer.Implementation
             return true;
         }
 
-        public async Task<bool> UploadAndSetAvatarAsync(int userId, IFormFile file)
+        public async Task<string> UploadAndSetAvatarAsync(int userId, IFormFile file)
         {
             var user = await GetByIdAsync(userId);
             if (user == null)
@@ -398,6 +398,12 @@ namespace FMS.ServiceLayer.Implementation
 
             if (file == null || file.Length == 0)
                 throw new InvalidOperationException("File is required");
+
+            if (!string.IsNullOrEmpty(user.Avatar))
+            {
+                var publicId = GetPublicIdFromUrl(user.Avatar);
+                await _cloudinary.DestroyAsync(new DeletionParams(publicId));
+            }
 
             using var stream = file.OpenReadStream();
             var uploadParams = new ImageUploadParams()
@@ -418,9 +424,46 @@ namespace FMS.ServiceLayer.Implementation
             _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync();
 
-            return true;
+            return user.Avatar;
+        }
+        private string GetPublicIdFromUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return null;
+
+            // Ví dụ URL: https://res.cloudinary.com/demo/image/upload/v12345/avatars/abc123.jpg
+            // Public ID sẽ là: avatars/abc123
+            var uri = new Uri(url);
+            var segments = uri.AbsolutePath.Split('/');
+            var fileName = segments.Last();
+            var publicIdWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+
+            // Nếu bạn lưu trong folder "avatars", cần cộng thêm tên folder
+            return $"avatars/{publicIdWithoutExtension}";
         }
 
+        public async Task<bool> DeleteAvatarAsync(int userId)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null) throw new InvalidOperationException("Không tìm thấy người dùng");
+
+            if (string.IsNullOrEmpty(user.Avatar)) return true; // Đã không có ảnh rồi
+
+            // 1. Xóa ảnh trên Cloudinary
+            var publicId = GetPublicIdFromUrl(user.Avatar);
+            var deletionParams = new DeletionParams(publicId);
+            var result = await _cloudinary.DestroyAsync(deletionParams);
+
+            if (result.Result == "ok")
+            {
+                // 2. Cập nhật database thành null hoặc chuỗi rỗng
+                user.Avatar = null;
+                _unitOfWork.Users.Update(user);
+                await _unitOfWork.SaveChangesAsync();
+                return true;
+            }
+
+            return false;
+        }
 
     }
 }
