@@ -4,6 +4,7 @@ using FMS.Pagination;
 using FMS.ServiceLayer.DTO.TripDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace FMS.ServiceLayer.Implementation
@@ -11,9 +12,11 @@ namespace FMS.ServiceLayer.Implementation
     public class TripService : ITripService
     {
         private readonly IUnitOfWork _unitOfWork;
-        public TripService(IUnitOfWork unitOfWork)
+        private readonly ILogger<TripService> _logger;
+        public TripService(IUnitOfWork unitOfWork, ILogger<TripService> logger)
         {
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
         public async Task<PaginatedResult<TripListDto>> GetTripsAsync(TripParams @params)
         {
@@ -21,12 +24,20 @@ namespace FMS.ServiceLayer.Implementation
             var query = _unitOfWork.Trips.Query().AsNoTracking();
 
             // --- BƯỚC 1: LỌC (FILTERING) ---
-            // ALWAYS exclude "Planned" trips (they are shown in Bookings page)
-            query = query.Where(t => t.TripStatus != "Planned" && t.TripStatus != "planned");
+            // ALWAYS exclude "planned" trips (they are shown in Bookings page) - use case-insensitive check
+            query = query.Where(t => t.TripStatus == null || t.TripStatus.ToLower() != "planned");
 
             if (!string.IsNullOrEmpty(@params.TripStatus))
             {
-                query = query.Where(t => t.TripStatus == @params.TripStatus);
+                var filterStatus = @params.TripStatus.ToLower();
+                query = query.Where(t => t.TripStatus != null && t.TripStatus.ToLower() == filterStatus);
+            }
+
+            // If driver user id is provided, limit trips to those assigned to that driver (by UserID)
+            if (@params.DriverUserId.HasValue)
+            {
+                var duid = @params.DriverUserId.Value;
+                query = query.Where(t => t.TripDrivers.Any(td => td.Driver != null && td.Driver.User != null && td.Driver.User.UserID == duid));
             }
 
             // Keyword search: vehicle license plate or driver name
@@ -104,7 +115,13 @@ namespace FMS.ServiceLayer.Implementation
                     ? t.ExtraExpenses.Sum(e => e.Amount).ToString() + "đ"
                     : "0đ",
 
-                Status = t.TripStatus == "Completed" ? "completed" : "in-progress",
+                // Normalize TripStatus from DB into a small set of keys the frontend expects.
+                Status = t.TripStatus == null ? "unknown" :
+                          (t.TripStatus.ToLower() == "completed" ? "completed" :
+                          (t.TripStatus.ToLower() == "confirmed" ? "confirmed" :
+                          (t.TripStatus.ToLower() == "in progress" || t.TripStatus.ToLower() == "in_transit" || t.TripStatus.ToLower() == "in-transit" ? "in-progress" :
+                          (t.TripStatus.ToLower() == "planned" ? "planned" :
+                          t.TripStatus.ToLower())))),
 
                 Multiday = t.EndTime != null && t.StartTime.Date != t.EndTime.Value.Date,
 
@@ -130,8 +147,8 @@ namespace FMS.ServiceLayer.Implementation
             return new TripStatsDto
             {
                 TodayTrips = await query.CountAsync(t => t.StartTime.Date == today),
-                InProgress = await query.CountAsync(t => t.TripStatus == "In Progress"),
-                Completed = await query.CountAsync(t => t.TripStatus == "Completed"),
+                InProgress = await query.CountAsync(t => t.TripStatus != null && t.TripStatus.ToLower() == "in progress"),
+                Completed = await query.CountAsync(t => t.TripStatus != null && t.TripStatus.ToLower() == "completed"),
                 TotalDistance = string.Format("{0:N0} km",
                     await query.SumAsync(t => t.TotalDistanceKm ?? 0))
             };
@@ -148,7 +165,10 @@ namespace FMS.ServiceLayer.Implementation
                                                 .ThenInclude(d => d.User)
                                         .Include(t => t.TripSteps)
                                         .Include(t => t.ExtraExpenses)
-                                        .FirstAsync(d => d.TripID == tripId);
+                                        .FirstOrDefaultAsync(d => d.TripID == tripId);
+
+            if (trip == null)
+                throw new KeyNotFoundException("Trip not found");
 
             return new OrderListDto
             {
@@ -157,15 +177,15 @@ namespace FMS.ServiceLayer.Implementation
                 Contact = trip.CustomerPhone,
                 Pickup = trip.StartLocation,
                 Dropoff = trip.EndLocation,
-                Vehicle = trip.Vehicle.LicensePlate,
-                Driver = trip.TripDrivers
+                Vehicle = trip.Vehicle != null ? trip.Vehicle.LicensePlate : null,
+                Driver = (trip.TripDrivers ?? Enumerable.Empty<TripDriver>())
                             .OrderByDescending(td => td.AssignedFrom)
-                            .Select(td => td.Driver.User.FullName)
+                            .Select(td => td.Driver != null && td.Driver.User != null ? td.Driver.User.FullName : null)
                             .FirstOrDefault(),
 
                 Status = trip.TripStatus,
 
-                Steps = trip.TripSteps
+                Steps = (trip.TripSteps ?? Enumerable.Empty<TripStep>())
                     .OrderBy(s => s.TripStepID)
                     .Select(s => new TripStepDto
                     {
@@ -177,15 +197,66 @@ namespace FMS.ServiceLayer.Implementation
                             : null
                     }).ToList(),
 
-                Cost = $"{trip.ExtraExpenses.Sum(e => e.Amount):N0}đ"
+                Cost = $"{(trip.ExtraExpenses?.Sum(e => e.Amount) ?? 0):N0}đ"
             };
          
+        }
+
+        public async Task<OrderListDto> ConfirmTripStepAsync(int tripId, string stepKey)
+        {
+            if (tripId <= 0) throw new ArgumentException("Trip id not found");
+            if (string.IsNullOrEmpty(stepKey)) throw new ArgumentException("Step key required");
+
+            var step = await _unitOfWork.TripSteps.Query()
+                .FirstOrDefaultAsync(s => s.TripID == tripId && s.StepKey == stepKey);
+            if (step == null) throw new KeyNotFoundException("Step not found");
+
+            step.IsDone = true;
+            step.ConfirmedAt = DateTime.Now;
+            _unitOfWork.TripSteps.Update(step);
+            await _unitOfWork.SaveChangesAsync();
+
+            // Determine overall trip status:
+            // - If confirming the first step (pickup) => set trip status to "in progress"
+            // - If all steps done => set trip status to "completed"
+            var allDone = await _unitOfWork.TripSteps.Query()
+                .Where(s => s.TripID == tripId)
+                .AllAsync(s => s.IsDone);
+
+            var trip = await _unitOfWork.Trips.GetByIdAsync(tripId);
+            if (trip != null)
+            {
+                if (allDone)
+                {
+                    if (!string.Equals(trip.TripStatus, "completed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        trip.TripStatus = "completed";
+                        _unitOfWork.Trips.Update(trip);
+                        await _unitOfWork.SaveChangesAsync();
+                    }
+                }
+                else
+                {
+                    // if not all done and this was the pickup confirmation, mark as in progress
+                    if (string.Equals(step.StepKey, "pickup", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(trip.TripStatus, "in progress", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(trip.TripStatus, "completed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        trip.TripStatus = "in progress";
+                        _unitOfWork.Trips.Update(trip);
+                        await _unitOfWork.SaveChangesAsync();
+                    }
+                }
+            }
+
+            // return refreshed order list
+            return await GetOrdersByIdAsync(tripId);
         }
 
         public async Task<PaginatedResult<BookedTripListDto>> GetBookedTripListAsync(BookedTripParams @params)
         {
             var query =  _unitOfWork.Trips.Query()
-                .Where(t => t.ScheduledStartTime != null && t.TripStatus == "Planned").AsNoTracking();
+                .Where(t => t.ScheduledStartTime != null && t.TripStatus != null && t.TripStatus.ToLower() == "planned").AsNoTracking();
 
             // --- BƯỚC 1: LỌC (FILTERING) ---
             // Keyword search: customer name, phone, or email
@@ -273,10 +344,37 @@ namespace FMS.ServiceLayer.Implementation
 
         public async Task<Trip> CreateBookingTripAsync(CreateBookingTripDto dto)
         {
+            // helper to compute a deterministic distance estimate from start/end strings
+            static int ComputeDistanceFromStrings(string start, string end)
+            {
+                var s = start ?? "";
+                var e = end ?? "";
+                int hashStart = 0;
+                foreach (var c in s) hashStart += c;
+                int hashEnd = 0;
+                foreach (var c in e) hashEnd += c;
+                return Math.Abs(hashStart - hashEnd) % 2000 + 50; // 50..2049 km
+            }
+
+            var estimatedDistance = dto.EstimatedDistanceKm;
+            if (!estimatedDistance.HasValue)
+            {
+                estimatedDistance = ComputeDistanceFromStrings(dto.StartLocation, dto.EndLocation);
+            }
+
+            var estimatedDuration = dto.EstimatedDurationMin;
+            if (!estimatedDuration.HasValue)
+            {
+                estimatedDuration = estimatedDistance ?? 0;
+            }
+
+            _logger?.LogDebug("Creating trip: Customer={Customer}, Start={Start}, End={End}, Scheduled={Scheduled}",
+                dto.CustomerName, dto.StartLocation, dto.EndLocation, dto.ScheduledStartTime);
+
             var trip = new Trip
             {
                 // CHƯA ASSIGN
-                VehicleID = null,
+                VehicleID = dto.VehicleID,
 
                 // CUSTOMER
                 CustomerName = dto.CustomerName,
@@ -286,11 +384,12 @@ namespace FMS.ServiceLayer.Implementation
                 // ROUTE
                 StartLocation = dto.StartLocation,
                 EndLocation = dto.EndLocation,
-                RouteGeometryJson = dto.RouteGeometryJson,
+                // Ensure RouteGeometryJson is always a string
+                RouteGeometryJson = string.IsNullOrEmpty(dto.RouteGeometryJson) ? "string" : dto.RouteGeometryJson,
 
                 // ESTIMATE
-                EstimatedDistanceKm = dto.EstimatedDistanceKm,
-                EstimatedDurationMin = dto.EstimatedDurationMin,
+                EstimatedDistanceKm = estimatedDistance,
+                EstimatedDurationMin = estimatedDuration,
 
                 // BOOKING TIME
                 ScheduledStartTime = dto.ScheduledStartTime,
@@ -302,10 +401,44 @@ namespace FMS.ServiceLayer.Implementation
 
                 // STATUS
                 TripStatus = "planned",
-                StartTime = dto.ScheduledStartTime
+                StartTime = dto.ScheduledStartTime,
+                // Actual duration should always be null on creation
+                ActualDurationMin = null
             };
 
             await _unitOfWork.Trips.AddAsync(trip);
+            await _unitOfWork.SaveChangesAsync();
+            _logger?.LogInformation("Created trip {TripID} with EstimatedDistanceKm={Distance} EstimatedDurationMin={Duration}",
+                trip.TripID, trip.EstimatedDistanceKm, trip.EstimatedDurationMin);
+            
+            // Create default TripSteps for the new trip (IsDone = false)
+            // Default steps: pickup -> on_way -> delivery
+            var steps = new List<TripStep>
+            {
+                new TripStep
+                {
+                    TripID = trip.TripID,
+                    StepKey = "pickup",
+                    StepLabel = "Lấy hàng tại kho",
+                    IsDone = false
+                },
+                new TripStep
+                {
+                    TripID = trip.TripID,
+                    StepKey = "on_way",
+                    StepLabel = "Đang vận chuyển",
+                    IsDone = false
+                },
+                new TripStep
+                {
+                    TripID = trip.TripID,
+                    StepKey = "delivery",
+                    StepLabel = "Giao hàng cho khách",
+                    IsDone = false
+                }
+            };
+
+            await _unitOfWork.TripSteps.AddRangeAsync(steps);
             await _unitOfWork.SaveChangesAsync();
 
             return trip;
@@ -314,10 +447,16 @@ namespace FMS.ServiceLayer.Implementation
         public async Task<bool> CancelBookedTripAsync(int tripId)
         {
             var trip = await _unitOfWork.Trips.GetByIdAsync(tripId);
-            if (trip == null || trip.TripStatus != "Planned") return false;
+            if (trip == null) return false;
 
-            trip.TripStatus = "Cancelled";
-            _unitOfWork.Trips.Update(trip);
+            // Remove related TripSteps and ExtraExpenses explicitly if present to ensure full deletion
+            var steps = _unitOfWork.TripSteps.Query().Where(s => s.TripID == tripId);
+            _unitOfWork.TripSteps.RemoveRange(steps);
+
+            var expenses = _unitOfWork.ExtraExpenses.Query().Where(e => e.TripID == tripId);
+            _unitOfWork.ExtraExpenses.RemoveRange(expenses);
+
+            _unitOfWork.Trips.Remove(trip);
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
@@ -325,11 +464,87 @@ namespace FMS.ServiceLayer.Implementation
         public async Task<bool> DeleteBookedTripAsync(int tripId)
         {
             var trip = await _unitOfWork.Trips.GetByIdAsync(tripId);
-            if (trip == null || trip.TripStatus != "Planned") return false;
+            if (trip == null) return false;
+            if (!string.Equals(trip.TripStatus, "planned", StringComparison.OrdinalIgnoreCase)) return false;
 
             _unitOfWork.Trips.Remove(trip);
             await _unitOfWork.SaveChangesAsync();
             return true;
+        }
+        
+        public async Task<bool> ConfirmBookedTripAsync(int tripId)
+        {
+            var trip = await _unitOfWork.Trips.GetByIdAsync(tripId);
+            if (trip == null) return false;
+            // Only allow confirming planned trips
+            if (!string.Equals(trip.TripStatus, "planned", StringComparison.OrdinalIgnoreCase)) return false;
+
+            trip.TripStatus = "confirmed";
+            _unitOfWork.Trips.Update(trip);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        // Estimate and update trips in database: set ActualDurationMin = null,
+        // RouteGeometryJson = "string", and fill EstimatedDistanceKm & EstimatedDurationMin if missing.
+        public async Task<int> EstimateAndUpdateTripsAsync()
+        {
+            var trips = await _unitOfWork.Trips.Query().ToListAsync();
+            var updatedCount = 0;
+
+            foreach (var trip in trips)
+            {
+                var changed = false;
+
+                // Ensure ActualDurationMin is always null
+                if (trip.ActualDurationMin != null)
+                {
+                    trip.ActualDurationMin = null;
+                    changed = true;
+                }
+
+                // Ensure RouteGeometryJson is a (non-null) string
+                if (string.IsNullOrEmpty(trip.RouteGeometryJson))
+                {
+                    trip.RouteGeometryJson = "string";
+                    changed = true;
+                }
+
+                // Estimate distance if missing
+                if (!trip.EstimatedDistanceKm.HasValue)
+                {
+                    var start = trip.StartLocation ?? "";
+                    var end = trip.EndLocation ?? "";
+                    // deterministic simple hash-based estimate in km
+                    int hashStart = 0;
+                    foreach (var c in start) hashStart += c;
+                    int hashEnd = 0;
+                    foreach (var c in end) hashEnd += c;
+                    var distance = Math.Abs(hashStart - hashEnd) % 2000 + 50; // 50..2049 km
+                    trip.EstimatedDistanceKm = distance;
+                    changed = true;
+                }
+
+                // Estimate duration minutes if missing: use distance (1 km ~= 1 minute at avg speed 60km/h)
+                if (!trip.EstimatedDurationMin.HasValue)
+                {
+                    trip.EstimatedDurationMin = trip.EstimatedDistanceKm ?? 0;
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    _unitOfWork.Trips.Update(trip);
+                    updatedCount++;
+                }
+            }
+
+            if (updatedCount > 0)
+            {
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return updatedCount;
         }
     }
 }
