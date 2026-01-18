@@ -100,6 +100,7 @@ builder.Services.AddScoped<IMaintenanceService, FMS.ServiceLayer.Implementation.
 builder.Services.AddScoped<IFuelRecordService, FMS.ServiceLayer.Implementation.FuelRecordService>();
 builder.Services.AddScoped<ITripAssignmentService, TripAssignmentService>();
 builder.Services.AddSingleton<CloudinaryService>();
+builder.Services.AddScoped<IExtraExpenseService, FMS.ServiceLayer.Implementation.ExtraExpenseService>();
 
 
 

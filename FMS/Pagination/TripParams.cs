@@ -10,6 +10,9 @@
         // Các tiêu chí lọc
         public string? TripStatus { get; set; }
         
+        // Filter by the UserID of the assigned driver (optional, used for driver view)
+        public int? DriverUserId { get; set; }
+        
         // Search keyword (vehicle license plate or driver name)
         public string? Keyword { get; set; }
         
