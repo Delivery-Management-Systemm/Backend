@@ -269,26 +269,59 @@ namespace FMS.Controllers
         }
 
         // POST: api/avatar/upload/{userId}
+        // Dùng chung cho cả thêm mới và cập nhật (Overwrite)
         [HttpPost("upload/{userId}")]
         public async Task<IActionResult> UploadAvatar(int userId, IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
-                return BadRequest("File is required");
+                return BadRequest(new { message = "Vui lòng chọn file ảnh" });
             }
 
             try
             {
-                var success = await _userService.UploadAndSetAvatarAsync(userId, file);
+                // Giả sử hàm này trả về URL của ảnh sau khi upload thành công
+                // Bạn nên sửa Service trả về string thay vì bool để frontend nhận được link ảnh
+                var newAvatarUrl = await _userService.UploadAndSetAvatarAsync(userId, file);
 
-                if (!success)
-                    return BadRequest("Upload failed");
-
-                return Ok(new { message = "Avatar updated successfully" });
+                return Ok(new
+                {
+                    message = "Cập nhật ảnh đại diện thành công",
+                    avatarUrl = newAvatarUrl
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { error = ex.Message });
+                return StatusCode(500, new { error = "Lỗi hệ thống: " + ex.Message });
+            }
+        }
+
+        // DELETE: api/avatar/delete/{userId}
+        [HttpDelete("delete/{userId}")]
+        public async Task<IActionResult> DeleteAvatar(int userId)
+        {
+            try
+            {
+                var success = await _userService.DeleteAvatarAsync(userId);
+
+                if (!success)
+                {
+                    return BadRequest(new { message = "Không thể xóa ảnh đại diện hoặc người dùng không có ảnh" });
+                }
+
+                return Ok(new { message = "Xóa ảnh đại diện thành công" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Lỗi hệ thống: " + ex.Message });
             }
         }
 
