@@ -1,4 +1,4 @@
-﻿using CloudinaryDotNet.Actions;
+using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
 using FMS.DAL.Interfaces;
 using FMS.Models;
@@ -111,12 +111,12 @@ namespace FMS.ServiceLayer.Implementation
 
         public async Task<PaginatedResult<User>> GetAllUsersAsync(UserParams @params)
         {
-            // Khởi tạo query từ UnitOfWork
+            // Kh?i t?o query t? UnitOfWork
             var query = _unitOfWork.Users.Query().AsNoTracking();
 
-            // --- BƯỚC 1: LỌC (FILTERING) ---
+            // --- BU?C 1: L?C (FILTERING) ---
             
-            // Lọc theo Keyword (tên, email, SĐT)
+            // L?c theo Keyword (t�n, email, S�T)
             if (!string.IsNullOrEmpty(@params.Keyword))
             {
                 var keyword = @params.Keyword.ToLower();
@@ -127,13 +127,13 @@ namespace FMS.ServiceLayer.Implementation
                 );
             }
             
-            // Lọc theo Role
+            // L?c theo Role
             if (!string.IsNullOrEmpty(@params.Role))
             {
                 query = query.Where(u => u.Role == @params.Role);
             }
 
-            // --- BƯỚC 2: SẮP XẾP (SORTING) ---
+            // --- BU?C 2: S?P X?P (SORTING) ---
             if (!string.IsNullOrEmpty(@params.SortBy))
             {
                 query = @params.SortBy.ToLower() switch
@@ -141,16 +141,16 @@ namespace FMS.ServiceLayer.Implementation
                     "fullname" => @params.IsDescending ? query.OrderByDescending(u => u.FullName) : query.OrderBy(u => u.FullName),
                     "role" => @params.IsDescending ? query.OrderByDescending(u => u.Role) : query.OrderBy(u => u.Role),
                     "email" => @params.IsDescending ? query.OrderByDescending(u => u.Email) : query.OrderBy(u => u.Email),
-                    // Mặc định sắp xếp theo FullName hoặc Id
+                    // M?c d?nh s?p x?p theo FullName ho?c Id
                     _ => @params.IsDescending ? query.OrderByDescending(u => u.FullName) : query.OrderBy(u => u.FullName)
                 };
             }
             else
             {
-                query = query.OrderBy(u => u.FullName); // Luôn cần OrderBy trước khi Paginate
+                query = query.OrderBy(u => u.FullName); // Lu�n c?n OrderBy tru?c khi Paginate
             }
 
-            // --- BƯỚC 3: PHÂN TRANG (PAGINATION) ---
+            // --- BU?C 3: PH�N TRANG (PAGINATION) ---
            
             return await query.paginate(@params.PageSize, @params.PageNumber);
         }
@@ -210,6 +210,18 @@ namespace FMS.ServiceLayer.Implementation
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
                 throw new InvalidOperationException("Invalid credentials");
 
+            if (user.LastLoginAt == null)
+            {
+                if (string.IsNullOrWhiteSpace(user.Email))
+                    throw new InvalidOperationException("FIRST_LOGIN_EMAIL_REQUIRED");
+
+                throw new InvalidOperationException("FIRST_LOGIN_OTP_REQUIRED");
+            }
+
+            user.LastLoginAt = DateTime.UtcNow;
+            _unitOfWork.Users.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
             var token = GenerateToken(user);
             return (user, token);
         }
@@ -220,7 +232,7 @@ namespace FMS.ServiceLayer.Implementation
             if (user == null)
                 throw new InvalidOperationException("User not found");
 
-            // Chỉ update khi có dữ liệu (KHÔNG overwrite null)
+            // Ch? update khi c� d? li?u (KH�NG overwrite null)
             if (!string.IsNullOrWhiteSpace(dto.FullName))
                 user.FullName = dto.FullName.Trim();
 
@@ -237,12 +249,47 @@ namespace FMS.ServiceLayer.Implementation
             if (!string.IsNullOrWhiteSpace(dto.Email))
                 user.Email = dto.Email;
 
-            // ⭐ AVATAR
+            // ? AVATAR
             if (!string.IsNullOrWhiteSpace(dto.Avatar))
                 user.Avatar = dto.Avatar;
 
+            if (!string.IsNullOrWhiteSpace(dto.BirthPlace))
+                user.BirthPlace = dto.BirthPlace.Trim();
+
+            if (dto.BirthDate.HasValue)
+                user.BirthDate = dto.BirthDate.Value;
+
             _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SetEmailForFirstLoginAsync(string phone, string password, string email)
+        {
+            if (string.IsNullOrWhiteSpace(phone) ||
+                string.IsNullOrWhiteSpace(password) ||
+                string.IsNullOrWhiteSpace(email))
+            {
+                throw new InvalidOperationException("Phone, password, and email are required");
+            }
+
+            var user = await GetByPhoneAsync(phone);
+            if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+                throw new InvalidOperationException("Invalid credentials");
+
+            if (!string.IsNullOrWhiteSpace(user.Email))
+                throw new InvalidOperationException("Email already exists");
+
+            var normalizedEmail = NormalizeEmail(email);
+            var exists = await _unitOfWork.Users.Query()
+                .AnyAsync(u => u.Email.ToLower() == normalizedEmail);
+            if (exists)
+                throw new InvalidOperationException("Email is already registered");
+
+            user.Email = normalizedEmail;
+            _unitOfWork.Users.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
             return true;
         }
 
@@ -255,33 +302,35 @@ namespace FMS.ServiceLayer.Implementation
             // Sinh OTP
             var otp = GenerateOtpCode();
 
-            // Lưu OTP vào cache với thời hạn 5 phút
+            // Luu OTP v�o cache v?i th?i h?n 5 ph�t
             _cache.Set($"otp_{email}", otp, TimeSpan.FromMinutes(5));
 
-            // Gửi email
+            // G?i email
             await _emailService.SendAsync(email, "Password Reset OTP", $"Your OTP code is {otp}");
 
             return true;
         }
 
-        public async Task<bool> ResetPasswordAsync(string email, string otp, string newPassword)
+        public async Task<(User user, string token)> ResetPasswordAsync(string email, string otp, string newPassword)
         {
-            // Kiểm tra OTP trong cache
+            // Ki?m tra OTP trong cache
             if (!_cache.TryGetValue($"otp_{email}", out string cachedOtp) || cachedOtp != otp)
                 throw new InvalidOperationException("Invalid or expired OTP");
 
             var user = await _unitOfWork.Users.Query().FirstOrDefaultAsync(u => u.Email == email);
             if (user == null) throw new InvalidOperationException("User not found");
 
-            // Hash mật khẩu mới
+            // Hash m?t kh?u m?i
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            user.LastLoginAt = DateTime.UtcNow;
 
             _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync();
 
             _cache.Remove($"otp_{email}");
 
-            return true;
+            var token = GenerateToken(user);
+            return (user, token);
         }
 
         public async Task<bool> DeleteAccountAsync(int userId)
@@ -431,32 +480,32 @@ namespace FMS.ServiceLayer.Implementation
         {
             if (string.IsNullOrEmpty(url)) return null;
 
-            // Ví dụ URL: https://res.cloudinary.com/demo/image/upload/v12345/avatars/abc123.jpg
-            // Public ID sẽ là: avatars/abc123
+            // V� d? URL: https://res.cloudinary.com/demo/image/upload/v12345/avatars/abc123.jpg
+            // Public ID s? l�: avatars/abc123
             var uri = new Uri(url);
             var segments = uri.AbsolutePath.Split('/');
             var fileName = segments.Last();
             var publicIdWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
 
-            // Nếu bạn lưu trong folder "avatars", cần cộng thêm tên folder
+            // N?u b?n luu trong folder "avatars", c?n c?ng th�m t�n folder
             return $"avatars/{publicIdWithoutExtension}";
         }
 
         public async Task<bool> DeleteAvatarAsync(int userId)
         {
             var user = await _unitOfWork.Users.GetByIdAsync(userId);
-            if (user == null) throw new InvalidOperationException("Không tìm thấy người dùng");
+            if (user == null) throw new InvalidOperationException("Kh�ng t�m th?y ngu?i d�ng");
 
-            if (string.IsNullOrEmpty(user.Avatar)) return true; // Đã không có ảnh rồi
+            if (string.IsNullOrEmpty(user.Avatar)) return true; // �� kh�ng c� ?nh r?i
 
-            // 1. Xóa ảnh trên Cloudinary
+            // 1. X�a ?nh tr�n Cloudinary
             var publicId = GetPublicIdFromUrl(user.Avatar);
             var deletionParams = new DeletionParams(publicId);
             var result = await _cloudinary.DestroyAsync(deletionParams);
 
             if (result.Result == "ok")
             {
-                // 2. Cập nhật database thành null hoặc chuỗi rỗng
+                // 2. C?p nh?t database th�nh null ho?c chu?i r?ng
                 user.Avatar = null;
                 _unitOfWork.Users.Update(user);
                 await _unitOfWork.SaveChangesAsync();
@@ -468,3 +517,4 @@ namespace FMS.ServiceLayer.Implementation
 
     }
 }
+
