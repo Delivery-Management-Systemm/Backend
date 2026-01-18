@@ -19,6 +19,7 @@ namespace FMS.Models
         public int TotalTrips { get; set; }
         public double? Rating { get; set; }
         public int ExperienceYears { get; set; }
+        public string? GPLX { get; set; }
 
         // Active | OnTrip | OnLeave | Suspended
         [StringLength(20)] public string? DriverStatus { get; set; }
