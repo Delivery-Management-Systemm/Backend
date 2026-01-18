@@ -9,6 +9,7 @@ namespace FMS.ServiceLayer.DTO.DriverDto
         [Required] public string Phone { get; set; } = string.Empty;
         public string? Email { get; set; }
         public string? BirthPlace { get; set; }
+        public string? GPLX { get; set; }
         public int ExperienceYears { get; set; }
         public List<CreateDriverLicenseDto> Licenses { get; set; }
         // Trạng thái: "Sẵn sàng", "Đang lái", "Nghỉ phép"...
