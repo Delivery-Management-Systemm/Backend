@@ -162,7 +162,7 @@ namespace FMS.ServiceLayer.Implementation
                 FullName = createdDriver.User.FullName,
                 Phone = createdDriver.User.Phone,
                 Email = createdDriver.User.Email,
-                BirthPlace = createdDriver.BirthPlace,
+                BirthPlace = createdDriver.User.BirthPlace,
                 ExperienceYears = createdDriver.ExperienceYears,
                 TotalTrips = createdDriver.TotalTrips,
                 Rating = createdDriver.Rating,
@@ -188,7 +188,6 @@ namespace FMS.ServiceLayer.Implementation
             var driver = new Driver
             {
                 UserID = userId,
-                BirthPlace = dto.BirthPlace,
                 ExperienceYears = dto.ExperienceYears,
                 GPLX = dto.GPLX,
 
@@ -222,10 +221,13 @@ namespace FMS.ServiceLayer.Implementation
                 // 1️⃣ Create User
                 var user = await _userService.RegisterAsync(new User
                 {
-                    FullName = dto.FullName,
-                    Phone = dto.Phone,
-                    Email = dto.Email,
-                    Role = "driver"
+                    FullName = dto.FullName.Trim(),
+                    Phone = dto.Phone.Trim(),
+                    Email = dto.Email?.Trim(),
+                    Role = "driver",
+                    BirthPlace = dto.BirthPlace?.Trim(),
+                    BirthDate = dto.BirthDate
+
                 }, dto.Password);
 
                 // 2️⃣ Create Driver Profile
@@ -247,7 +249,7 @@ namespace FMS.ServiceLayer.Implementation
                     FullName = createdDriver.User.FullName,
                     Phone = createdDriver.User.Phone,
                     Email = createdDriver.User.Email,
-                    BirthPlace = createdDriver.BirthPlace,
+                    BirthPlace = createdDriver.User.BirthPlace,
                     ExperienceYears = createdDriver.ExperienceYears,
                     TotalTrips = createdDriver.TotalTrips,
                     Rating = createdDriver.Rating,
@@ -300,7 +302,7 @@ namespace FMS.ServiceLayer.Implementation
             if (!string.IsNullOrEmpty(dto.Email))
                 driver.User.Email = dto.Email.Trim();
             if (!string.IsNullOrEmpty(dto.BirthPlace))
-                driver.BirthPlace = dto.BirthPlace.Trim();
+                driver.User.BirthPlace = dto.BirthPlace.Trim();
             if (dto.ExperienceYears.HasValue)
                 driver.ExperienceYears = dto.ExperienceYears.Value;
             if (!string.IsNullOrEmpty(dto.DriverStatus))
