@@ -32,6 +32,26 @@ namespace FMS.ServiceLayer.Implementation
 
             return result;
         }
+
+        public async Task<DeletionResult> DestroyAsync(DeletionParams deletionParams)
+        {
+            if (deletionParams == null)
+                throw new ArgumentNullException(nameof(deletionParams));
+
+            // Gọi hàm xóa của Cloudinary SDK
+            var result = await _cloudinary.DestroyAsync(deletionParams);
+
+            // Kiểm tra kết quả
+            // Cloudinary trả về StatusCode OK ngay cả khi public_id không tồn tại, 
+            // nhưng result.Result sẽ là "not found". 
+            // Tuy nhiên, để nhất quán với hàm Upload của bạn, ta kiểm tra StatusCode trước.
+            if (result.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                throw new InvalidOperationException($"Delete failed: {result.Error?.Message}");
+            }
+
+            return result;
+        }
     }
 }
 
