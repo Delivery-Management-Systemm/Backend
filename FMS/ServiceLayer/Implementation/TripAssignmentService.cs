@@ -75,7 +75,7 @@ namespace FMS.ServiceLayer.Implementation
                     .ToListAsync()
             );
         }
-        public async Task AssignVehicleAndDriverAsync(int tripId,int vehicleId,int driverId)
+        public async Task<bool> AssignVehicleAndDriverAsync(int tripId,int vehicleId,int driverId)
         {
             var trip = await _unitOfWork.Trips.Query()
                 .Include(t => t.TripDrivers)
@@ -122,7 +122,42 @@ namespace FMS.ServiceLayer.Implementation
             vehicle.VehicleStatus = "in_use";
             driver.DriverStatus = "on_trip";
 
+            // Create default TripSteps if they do not already exist for this trip
+            var hasSteps = await _unitOfWork.TripSteps.Query().AnyAsync(s => s.TripID == trip.TripID);
+            var createdSteps = false;
+            if (!hasSteps)
+            {
+                var steps = new List<TripStep>
+                {
+                    new TripStep
+                    {
+                        TripID = trip.TripID,
+                        StepKey = "pickup",
+                        StepLabel = "Lấy hàng tại kho",
+                        IsDone = false
+                    },
+                    new TripStep
+                    {
+                        TripID = trip.TripID,
+                        StepKey = "on_way",
+                        StepLabel = "Đang vận chuyển",
+                        IsDone = false
+                    },
+                    new TripStep
+                    {
+                        TripID = trip.TripID,
+                        StepKey = "delivery",
+                        StepLabel = "Giao hàng cho khách",
+                        IsDone = false
+                    }
+                };
+
+                await _unitOfWork.TripSteps.AddRangeAsync(steps);
+                createdSteps = true;
+            }
+
             await _unitOfWork.SaveChangesAsync();
+            return createdSteps;
         }
 
 

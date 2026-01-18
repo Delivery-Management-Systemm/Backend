@@ -32,12 +32,12 @@ namespace FMS.Controllers
             int tripId,int vehicleId, int driverId
         )
         {
-            await _tripAssignmentService.AssignVehicleAndDriverAsync(
+            var stepsCreated = await _tripAssignmentService.AssignVehicleAndDriverAsync(
                 tripId,
                 vehicleId,
                 driverId
             );
-            return Ok(new { message = "Vehicle and driver assigned successfully." });
+            return Ok(new { message = "Vehicle and driver assigned successfully.", stepsCreated });
         }
     }
 }

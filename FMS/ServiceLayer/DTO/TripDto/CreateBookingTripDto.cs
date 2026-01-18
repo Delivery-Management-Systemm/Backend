@@ -30,6 +30,9 @@ namespace FMS.ServiceLayer.DTO.TripDto
         [Required]
         public DateTime ScheduledStartTime { get; set; }
 
+        // Optional: allow assigning a vehicle at creation
+        public int? VehicleID { get; set; }
+
         // ===== YÊU CẦU PHƯƠNG TIỆN =====
         [StringLength(100)]
         public string RequestedVehicleType { get; set; }
