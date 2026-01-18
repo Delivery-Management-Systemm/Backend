@@ -10,6 +10,9 @@ namespace FMS.ServiceLayer.DTO.UserDto
         public string? Department { get; set; }
         [StringLength(20)] public string? Phone { get; set; }
 
+        [StringLength(100)] public string? BirthPlace { get; set; }
+        public DateTime? BirthDate { get; set; }
+
         public string? Avatar { get; set; }
     }
 }
