@@ -78,7 +78,11 @@ namespace FMS.Controllers
                 var user = new User
                 {
                     FullName = request.FullName,
-                    Phone = request.Phone
+                    Phone = request.Phone,
+                    Email = request.Email,
+                    BirthPlace = request.BirthPlace,
+                    BirthDate = request.BirthDate
+
                 };
 
                 var registeredUser = await _userService.RegisterAsync(user, request.Password);
