@@ -190,10 +190,12 @@ namespace FMS.ServiceLayer.Implementation
                 UserID = userId,
                 BirthPlace = dto.BirthPlace,
                 ExperienceYears = dto.ExperienceYears,
+                GPLX = dto.GPLX,
 
                 TotalTrips = 0,
                 Rating = null,
                 DriverStatus = "available"
+
             };
 
             await _unitOfWork.Drivers.AddAsync(driver);
