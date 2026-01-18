@@ -187,14 +187,15 @@ namespace FMS.ServiceLayer.Implementation
 
         public async Task<User> RegisterAsync(User user, string password)
         {
-            
 
-            //user.Email = user.Email.Trim();
+
+            user.Email = user.Email?.Trim().ToLower();
             user.FullName = user.FullName?.Trim() ?? string.Empty;
             user.Phone = user.Phone.Trim();
             user.Role = string.IsNullOrWhiteSpace(user.Role) ? "staff" : user.Role;
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
             user.RegisteredAt = DateTime.UtcNow;
+            user.BirthPlace = user.BirthPlace?.Trim();
             await _unitOfWork.Users.AddAsync(user);
             await _unitOfWork.SaveChangesAsync();
 

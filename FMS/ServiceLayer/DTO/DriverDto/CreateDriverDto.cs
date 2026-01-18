@@ -9,6 +9,8 @@ namespace FMS.ServiceLayer.DTO.DriverDto
         [Required] public string Phone { get; set; } = string.Empty;
         public string? Email { get; set; }
         public string? BirthPlace { get; set; }
+        public DateTime? BirthDate { get; set; }
+
         public string? GPLX { get; set; }
         public int ExperienceYears { get; set; }
         public List<CreateDriverLicenseDto> Licenses { get; set; }
