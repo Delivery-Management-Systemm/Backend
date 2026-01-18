@@ -8,6 +8,8 @@
         public string Phone { get; set; }
         public string? Email { get; set; }
         public string? BirthPlace { get; set; }
+        public DateTime? BirthDate { get; set; }
+        public string? GPLX { get; set; }
 
         public int ExperienceYears { get; set; }
 
