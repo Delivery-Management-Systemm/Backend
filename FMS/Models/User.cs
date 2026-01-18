@@ -11,6 +11,8 @@ namespace FMS.Models
         [StringLength(20)] public string Phone { get; set; }
         public DateTime RegisteredAt { get; set; }
         [StringLength(200)] public string? PasswordHash { get; set; }
+        [StringLength(100)] public string? BirthPlace { get; set; }
+        public DateTime? BirthDate { get; set; }
 
         public DateTime? LastLoginAt { get; set; }
 
