@@ -12,9 +12,10 @@ namespace FMS.ServiceLayer.Interface
         Task<User> RegisterAsync(User user, string password);
         Task<(User user, string token)> LoginAsync(string email, string password);
         Task<bool> UpdateProfileAsync(int userId, UpdateUserProfileDto dto);
+        Task<bool> SetEmailForFirstLoginAsync(string phone, string password, string email);
         Task<bool> DeleteAccountAsync(int userId);
         Task<bool> ForgotPasswordAsync(string email);
-        Task<bool> ResetPasswordAsync(string email, string otp, string newPassword);
+        Task<(User user, string token)> ResetPasswordAsync(string email, string otp, string newPassword);
         Task<string> SendRegistrationOtpAsync(string email, string purpose = "register");
         Task<bool> VerifyRegistrationOtpAsync(string email, string otp, string purpose = "register");
         Task<bool> ChangePasswordWithOtpAsync(string email, string newPassword);
