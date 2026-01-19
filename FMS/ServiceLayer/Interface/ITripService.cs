@@ -15,9 +15,9 @@ namespace FMS.ServiceLayer.Interface
 
         Task<Trip> CreateBookingTripAsync(CreateBookingTripDto dto);
         Task<int> EstimateAndUpdateTripsAsync();
-        Task<bool> CancelBookedTripAsync(int tripId);
+        Task<bool> CancelTripAsync(int tripId);
         Task<bool> ConfirmBookedTripAsync(int tripId);
-        Task<bool> DeleteBookedTripAsync(int tripId);
+     
 
     }
 }
