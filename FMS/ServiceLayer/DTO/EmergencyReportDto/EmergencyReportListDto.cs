@@ -17,8 +17,9 @@
         public string Driver { get; set; }
         public string Vehicle { get; set; }
 
-        public string ReportedAt { get; set; }
-        public string? RespondedAt { get; set; }
-        public string? ResolvedAt { get; set; }
+        public DateTime ReportedAt { get; set; }
+        public DateTime? RespondedAt { get; set; }
+        public DateTime? ResolvedAt { get; set; }
+
     }
 }

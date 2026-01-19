@@ -101,7 +101,7 @@ builder.Services.AddScoped<IFuelRecordService, FMS.ServiceLayer.Implementation.F
 builder.Services.AddScoped<ITripAssignmentService, TripAssignmentService>();
 builder.Services.AddSingleton<CloudinaryService>();
 builder.Services.AddScoped<IExtraExpenseService, FMS.ServiceLayer.Implementation.ExtraExpenseService>();
-
+builder.Services.AddScoped<IStatService, StatService>();
 
 
 builder.Services.AddSwaggerGen(c =>

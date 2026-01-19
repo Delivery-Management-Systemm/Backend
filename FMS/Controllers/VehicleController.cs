@@ -122,7 +122,8 @@ namespace FMS.Controllers
                 new { value = "Xe bán tải", label = "Xe bán tải" },
                 new { value = "SUV 7 chỗ", label = "SUV 7 chỗ" },
                 new { value = "Xe tải 5.5 tấn", label = "Xe tải 5.5 tấn" },
-                new { value = "Xe tải 3.5 tấn", label = "Xe tải 3.5 tấn" }
+                new { value = "Xe tải 3.5 tấn", label = "Xe tải 3.5 tấn" },
+                new { value = "Xe cointainer", label = "Xe container" }
             };
             return Ok(types);
         }

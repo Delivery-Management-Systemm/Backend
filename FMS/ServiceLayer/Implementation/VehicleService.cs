@@ -148,6 +148,7 @@ namespace FMS.ServiceLayer.Implementation
                     .ThenInclude(t => t.Driver) // Để lấy tên tài xế cho từng chuyến đi
                     .ThenInclude(d => d.User)
                 .Include(v => v.Maintenances)
+                .Include(v => v.RequiredLicenseClass)
                 .FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
 
             if (vehicle == null) return null;
@@ -163,6 +164,8 @@ namespace FMS.ServiceLayer.Implementation
                 Year = vehicle.ManufacturedYear ?? 0,
                 Mileage = vehicle.CurrentKm,
                 Capacity = vehicle.Capacity ?? "N/A",
+                FuelType = vehicle.FuelType ?? "N/A",
+                RequiredLicense = vehicle.RequiredLicenseClass?.Code ?? "N/A",
 
                 AssignedDriverId = vehicle.DriverID?.ToString(),
                 AssignedDriverName = vehicle.Driver?.User.FullName,
@@ -215,7 +218,7 @@ namespace FMS.ServiceLayer.Implementation
                 Capacity = dto.Capacity.Trim(),
                 CurrentKm = dto.CurrentKm,
                 FuelType = dto.FuelType,
-                VehicleStatus = dto.VehicleStatus,
+                VehicleStatus = "available",
                 RequiredLicenseClassID = requiredLicenseClassId
             };
             await _unitOfWork.Vehicles.AddAsync(vehicle);
