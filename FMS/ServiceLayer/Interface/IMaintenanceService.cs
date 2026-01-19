@@ -10,5 +10,6 @@ namespace FMS.ServiceLayer.Interface
         Task<PaginatedResult<MaintenanceListDto>> GetAllInvoiceAsync(MaintenanceParams @params);
         Task<int> CreateMaintenanceAsync(CreateMaintenanceDto dto);
         Task<MaintenanceStatsDto> GetMaintenanceStatsAsync();
+        Task<MaintenanceDetailDto> GetMaintenanceByIdAsync(int id);
     }
 }

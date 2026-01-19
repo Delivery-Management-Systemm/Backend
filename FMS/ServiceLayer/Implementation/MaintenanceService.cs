@@ -223,6 +223,46 @@ namespace FMS.ServiceLayer.Implementation
             };
         }
 
+        public async Task<MaintenanceDetailDto> GetMaintenanceByIdAsync(int id)
+        {
+            var maintenance = await _unitOfWork.Maintenances.Query()
+                .Include(m => m.Vehicle)
+                .Include(m => m.MaintenanceServices)
+                    .ThenInclude(ms => ms.Service)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.MaintenanceID == id);
 
+            if (maintenance == null)
+                throw new Exception("Maintenance not found");
+
+            return new MaintenanceDetailDto
+            {
+                Id = maintenance.MaintenanceID,
+                InvoiceNumber = $"HD-BT-{maintenance.MaintenanceID.ToString().PadLeft(4, '0')}",
+                Status = maintenance.MaintenanceStatus ?? "scheduled",
+
+                PlateNumber = maintenance.Vehicle?.LicensePlate,
+                Vehicle = maintenance.Vehicle != null
+                    ? maintenance.Vehicle.LicensePlate
+                    : "N/A",
+
+                Type = maintenance.MaintenanceType,
+                Technician = maintenance.TechnicianName,
+
+                ScheduledDate = maintenance.ScheduledDate,
+                Date = maintenance.MaintenanceStatus == "completed"
+                    ? maintenance.ScheduledDate
+                    : null,
+
+                Description = maintenance.Notes,
+                TotalAmount = maintenance.TotalCost,
+
+                Services = maintenance.MaintenanceServices.Select(ms => new MaintenanceServiceDetailDto
+                {
+                    Name = ms.Service.ServiceName,
+                    Price = ms.TotalPrice
+                }).ToList()
+            };
+        }
     }
 }

@@ -63,9 +63,9 @@ namespace FMS.ServiceLayer.Implementation
                 Reporter = e.Driver != null ? e.Driver.User.FullName : "Không xác định",
                 Driver = e.Driver != null ? e.Driver.User.FullName : "-",
                 Vehicle = e.Vehicle != null ? e.Vehicle.LicensePlate + " - " + e.Vehicle.VehicleType : "-",
-                ReportedAt = e.ReportedAt.ToString("HH:mm:ss dd/MM/yyyy"),
-                RespondedAt = e.RespondedAt == null ? null : e.RespondedAt.Value.ToString("HH:mm:ss dd/MM/yyyy"),
-                ResolvedAt = e.ResolvedAt == null ? null : e.ResolvedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
+                ReportedAt = e.ReportedAt,
+                RespondedAt = e.RespondedAt,
+                ResolvedAt = e.ResolvedAt
             });
 
             // 3. Gọi phân trang tại đây (sử dụng Extension Method)
@@ -160,13 +160,9 @@ namespace FMS.ServiceLayer.Implementation
                     ? report.Vehicle.LicensePlate + " - " + report.Vehicle.VehicleType
                     : "-",
 
-                ReportedAt = report.ReportedAt.ToString("HH:mm:ss dd/MM/yyyy"),
-                RespondedAt = report.RespondedAt != null
-                        ? report.RespondedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
-                        : null,
-                ResolvedAt = report.ResolvedAt != null
-                        ? report.ResolvedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
-                        : null
+                ReportedAt = report.ReportedAt,
+                RespondedAt = report.RespondedAt ,
+                ResolvedAt = report.ResolvedAt
             };
         }
         public async Task<EmergencyReportListDto> RespondEmergencyReportAsync(RespondEmergencyReportDto dto)
@@ -209,13 +205,9 @@ namespace FMS.ServiceLayer.Implementation
                     ? report.Vehicle.LicensePlate + " - " + report.Vehicle.VehicleType
                     : "-",
 
-                ReportedAt = report.ReportedAt.ToString("HH:mm:ss dd/MM/yyyy"),
-                RespondedAt = report.RespondedAt != null
-                        ? report.RespondedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
-                        : null,
-                ResolvedAt = report.ResolvedAt != null
-                        ? report.ResolvedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
-                        : null
+                ReportedAt = report.ReportedAt,
+                RespondedAt = report.RespondedAt,
+                ResolvedAt = report.ResolvedAt
             };
         }
 
