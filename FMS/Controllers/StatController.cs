@@ -18,5 +18,11 @@ namespace FMS.Controllers
             var stats = await _statService.GetDashboardStatsAsync();
             return Ok(stats);
         }
+        [HttpGet("top-cards")]
+        public async Task<IActionResult> GetTopCardsAsync()
+        {
+            var topCards = await _statService.GetTopCardsAsync();
+            return Ok(topCards);
+        }
     }
 }

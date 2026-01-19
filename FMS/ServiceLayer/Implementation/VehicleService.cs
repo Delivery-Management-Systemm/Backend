@@ -218,7 +218,7 @@ namespace FMS.ServiceLayer.Implementation
                 Capacity = dto.Capacity.Trim(),
                 CurrentKm = dto.CurrentKm,
                 FuelType = dto.FuelType,
-                VehicleStatus = dto.VehicleStatus,
+                VehicleStatus = "available",
                 RequiredLicenseClassID = requiredLicenseClassId
             };
             await _unitOfWork.Vehicles.AddAsync(vehicle);
