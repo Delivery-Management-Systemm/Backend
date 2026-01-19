@@ -30,5 +30,7 @@
         public string? AssignedDriverName { get; set; }
 
         public string Status { get; set; }
+
+        public int? EstimatedDistanceKm { get; set; }
     }
 }

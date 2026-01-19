@@ -5,6 +5,7 @@ using FMS.ServiceLayer.DTO.TripDto;
 using FMS.ServiceLayer.Interface;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace FMS.ServiceLayer.Implementation
@@ -165,10 +166,12 @@ namespace FMS.ServiceLayer.Implementation
                                                 .ThenInclude(d => d.User)
                                         .Include(t => t.TripSteps)
                                         .Include(t => t.ExtraExpenses)
+                                        .Include(t => t.FuelRecords)
                                         .FirstOrDefaultAsync(d => d.TripID == tripId);
 
             if (trip == null)
                 throw new KeyNotFoundException("Trip not found");
+            decimal fuelRecord = (decimal)trip.FuelRecords?.Sum(f => f.FuelCost);
 
             return new OrderListDto
             {
@@ -197,7 +200,9 @@ namespace FMS.ServiceLayer.Implementation
                             : null
                     }).ToList(),
 
-                Cost = $"{(trip.ExtraExpenses?.Sum(e => e.Amount) ?? 0):N0}đ"
+                TollCost = trip.ExtraExpenses?.Sum(e => e.Amount),
+                FuelCost = trip.FuelRecords?.Sum(f => f.FuelCost),
+                Cost = $"{((trip.ExtraExpenses?.Sum(e => e.Amount) ?? 0) + fuelRecord):N0}đ"
             };
          
         }
@@ -329,8 +334,9 @@ namespace FMS.ServiceLayer.Implementation
                                         .Where(td => td.Role == "Main Driver")
                                         .Select(td => td.Driver.User.FullName)
                                         .FirstOrDefault(),
-                    Status = t.TripStatus
-                });
+                    Status = t.TripStatus,
+                    EstimatedDistanceKm = t.EstimatedDistanceKm
+            });
             return await dtoQuery.paginate(@params.PageSize, @params.PageNumber);
         }
 
