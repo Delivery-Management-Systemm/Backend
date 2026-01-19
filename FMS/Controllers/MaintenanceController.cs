@@ -34,6 +34,15 @@ namespace FMS.Controllers
             var invoices = await _maintenanceService.GetAllInvoiceAsync(@params);
             return Ok(invoices);
         }
+
+        [HttpGet]
+        [Route("{id}")]
+        public async Task<IActionResult> GetMaintenanceById([FromRoute] int id)
+        {
+            var maintenance = await _maintenanceService.GetMaintenanceByIdAsync(id);
+            return Ok(maintenance);
+        }
+
         [HttpPost]
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> CreateMaintenance([FromBody] CreateMaintenanceDto dto)

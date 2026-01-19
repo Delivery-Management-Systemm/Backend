@@ -13,6 +13,10 @@
         public int? Mileage { get; set; }       // Map từ CurrentKm
         public string Capacity { get; set; }    // Ví dụ: "2.5 tons" (bạn có thể thêm trường này nếu cần)
 
+        public string FuelType { get; set; }    // Map từ FuelType
+
+        public string RequiredLicense { get; set; } // Map từ RequiredLicense
+
         // Thông tin tài xế (Khớp với assignedDriver)
         public string? AssignedDriverId { get; set; }
         public string? AssignedDriverName { get; set; }
