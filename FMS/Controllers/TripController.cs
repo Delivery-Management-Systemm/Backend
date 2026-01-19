@@ -125,10 +125,10 @@ namespace FMS.Controllers
         }
 
         // PUT: api/trip/booked/{tripId}/cancel
-        [HttpPut("booked/{tripId}/cancel")]
+        [HttpDelete("/{tripId}/cancel")]
         public async Task<IActionResult> CancelBookedTrip(int tripId)
         {
-            var result = await _tripService.CancelBookedTripAsync(tripId);
+            var result = await _tripService.CancelTripAsync(tripId);
             return result ? Ok(new { message = "Đã hủy lịch đặt trước" }) : NotFound(new { message = "Không tìm thấy lịch đặt trước" });
         }
 
@@ -140,12 +140,6 @@ namespace FMS.Controllers
             return result ? Ok(new { message = "Đã xác nhận lịch đặt trước" }) : NotFound(new { message = "Không tìm thấy lịch đặt trước" });
         }
 
-        // DELETE: api/trip/booked/{tripId}
-        [HttpDelete("booked/{tripId}")]
-        public async Task<IActionResult> DeleteBookedTrip(int tripId)
-        {
-            var result = await _tripService.DeleteBookedTripAsync(tripId);
-            return result ? Ok(new { message = "Đã xóa lịch đặt trước" }) : NotFound(new { message = "Không tìm thấy lịch đặt trước" });
-        }
+        
     }
 }
