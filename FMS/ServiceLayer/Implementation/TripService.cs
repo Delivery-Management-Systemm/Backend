@@ -231,6 +231,9 @@ namespace FMS.ServiceLayer.Implementation
                     if (!string.Equals(trip.TripStatus, "completed", StringComparison.OrdinalIgnoreCase))
                     {
                         trip.TripStatus = "completed";
+                        trip.TotalDistanceKm = trip.EstimatedDistanceKm; // for simplicity
+                        trip.EndTime = DateTime.Now;
+                        trip.ActualDurationMin = trip.EstimatedDurationMin; // for simplicity
                         _unitOfWork.Trips.Update(trip);
                         await _unitOfWork.SaveChangesAsync();
                     }
@@ -444,7 +447,7 @@ namespace FMS.ServiceLayer.Implementation
             return trip;
         }
 
-        public async Task<bool> CancelBookedTripAsync(int tripId)
+        public async Task<bool> CancelTripAsync(int tripId)
         {
             var trip = await _unitOfWork.Trips.GetByIdAsync(tripId);
             if (trip == null) return false;
@@ -461,16 +464,6 @@ namespace FMS.ServiceLayer.Implementation
             return true;
         }
 
-        public async Task<bool> DeleteBookedTripAsync(int tripId)
-        {
-            var trip = await _unitOfWork.Trips.GetByIdAsync(tripId);
-            if (trip == null) return false;
-            if (!string.Equals(trip.TripStatus, "planned", StringComparison.OrdinalIgnoreCase)) return false;
-
-            _unitOfWork.Trips.Remove(trip);
-            await _unitOfWork.SaveChangesAsync();
-            return true;
-        }
         
         public async Task<bool> ConfirmBookedTripAsync(int tripId)
         {
