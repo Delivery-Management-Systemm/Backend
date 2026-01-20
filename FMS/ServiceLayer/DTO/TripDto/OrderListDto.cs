@@ -21,5 +21,7 @@
         public decimal? TollCost { get; set; }         // "100,000đ"
 
         public string Cost { get; set; }             // "800,000đ"
+
+        public string? RouteGeometryJson { get; set; } // GeoJSON format
     }
 }
