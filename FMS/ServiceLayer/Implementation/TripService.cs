@@ -202,7 +202,8 @@ namespace FMS.ServiceLayer.Implementation
 
                 TollCost = trip.ExtraExpenses?.Sum(e => e.Amount),
                 FuelCost = trip.FuelRecords?.Sum(f => f.FuelCost),
-                Cost = $"{((trip.ExtraExpenses?.Sum(e => e.Amount) ?? 0) + fuelRecord):N0}đ"
+                Cost = $"{((trip.ExtraExpenses?.Sum(e => e.Amount) ?? 0) + fuelRecord):N0}đ",
+                RouteGeometryJson = trip.RouteGeometryJson
             };
          
         }
