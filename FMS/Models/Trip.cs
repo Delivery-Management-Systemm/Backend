@@ -30,6 +30,7 @@ namespace FMS.Models
         [Required, StringLength(255)]
         public string EndLocation { get; set; }
 
+        [Column(TypeName = "nvarchar(max)")]
         public string? RouteGeometryJson { get; set; } // GeoJSON
 
         // ====== THỐNG KÊ ======
