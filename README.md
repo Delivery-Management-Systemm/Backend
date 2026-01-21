@@ -1,4 +1,5 @@
-XÂY DỰNG WEBSITE GIÁM SÁT VÀ ĐIỀU PHỐI HỆ THỐNG ĐỘI XE
+Fleet Management System - XÂY DỰNG WEBSITE GIÁM SÁT VÀ ĐIỀU PHỐI HỆ THỐNG ĐỘI XE
+
 Website cung cấp giải pháp quản lý tập trung cho các doanh nghiệp vận tải, giúp giám sát lộ trình, điều phối xe/tài xế và tối ưu hóa quy trình vận hành đội xe theo thời gian thực.
 
 ✨ Tính năng chính
@@ -43,6 +44,17 @@ Hệ thống được thiết kế với 3 nhóm chức năng chính:
 
 - Bản đồ & Định vị: Google Maps API / Leaflet.
 
+- Cloudinary: Lưu trữ hình ảnh trên Cloud
+
+- BCrypt: Hash password để tăng tính bảo mật cho đồ án
+
+-SMTP Server: Gửi mã OTP về Gmail để xác thực password, email người dùng.
+
+- JWT: Authorization, Authentification
+
+- Pagination
+
+- Rate limit
 
 ⚙️ Hướng dẫn cài đặt
 
