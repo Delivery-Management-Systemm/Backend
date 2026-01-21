@@ -48,7 +48,7 @@ Hệ thống được thiết kế với 3 nhóm chức năng chính:
 
 - BCrypt: Hash password để tăng tính bảo mật cho đồ án
 
--SMTP Server: Gửi mã OTP về Gmail để xác thực password, email người dùng.
+- SMTP Server: Gửi mã OTP về Gmail để xác thực password, email người dùng.
 
 - JWT: Authorization, Authentification
 
