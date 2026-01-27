@@ -1,6 +1,7 @@
 ﻿using FMS.DAL.Interfaces;
 using FMS.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 
 
@@ -60,6 +61,12 @@ namespace FMS.DAL.Implementation
         public async ValueTask DisposeAsync()
         {
             await _context.DisposeAsync();
+        }
+
+        public async Task<IDbContextTransaction> BeginTransactionAsync(
+        CancellationToken cancellationToken = default)
+        {
+            return await _context.Database.BeginTransactionAsync(cancellationToken);
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace FMS.DAL.Interfaces
+﻿using Microsoft.EntityFrameworkCore.Storage;
+
+namespace FMS.DAL.Interfaces
 {
     //gom het tat ca repository vao 1 transaction duy nhat de tranh viec save changes nhieu lan
     public interface IUnitOfWork : IAsyncDisposable
@@ -23,6 +25,7 @@
         ITripStepRepository TripSteps { get; }
         IEmergencyReportRepository EmergencyReports { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+        Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
     }
 }
 

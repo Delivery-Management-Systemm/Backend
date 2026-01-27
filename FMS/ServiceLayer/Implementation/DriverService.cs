@@ -13,10 +13,13 @@ namespace FMS.ServiceLayer.Implementation
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _userService;
-        public DriverService(IUnitOfWork unitOfWork, IUserService userService)
+        private readonly ILogger<DriverService> _logger; // Thêm Logger
+
+        public DriverService(IUnitOfWork unitOfWork, IUserService userService,ILogger<DriverService> logger)
         {
             _unitOfWork = unitOfWork;
             _userService = userService;
+            _logger = logger;
         }
 
         public async Task<PaginatedResult<DriverListDto>> GetDriversAsync(DriverParams @params)
@@ -112,6 +115,9 @@ namespace FMS.ServiceLayer.Implementation
                     Rating = d.Rating,
                     Status = d.DriverStatus ?? "Active"
                 });
+            _logger.LogInformation(_logger.IsEnabled(LogLevel.Information)
+                ? $"GetDriversAsync executed with {dtoQuery.Count()} drivers found."
+                : "GetDriversAsync executed.");
             return await dtoQuery.paginate(@params.PageSize, @params.PageNumber);
 
         }
@@ -275,8 +281,12 @@ namespace FMS.ServiceLayer.Implementation
                 .Include(d => d.TripDrivers)
                 .ThenInclude(td => td.Trip)
                 .FirstOrDefaultAsync(d => d.DriverID == driverId);
+
             if (driver == null)
+            {
+                _logger.LogWarning("Không tìm thấy tài xế với ID: {DriverId} để cập nhật Rating.", driverId);
                 throw new Exception("Driver not found");
+            }
 
             var completedTrips = driver.TripDrivers
                 .Where(td => td.Trip.TripStatus == "Completed" && td.TripRating.HasValue)
@@ -296,8 +306,13 @@ namespace FMS.ServiceLayer.Implementation
 
         public async Task<bool> UpdateDriverAsync(int driverId, UpdateDriverDto dto)
         {
+            _logger.LogInformation("Yêu cầu cập nhật thông tin tài xế ID: {DriverId}", driverId);
             var driver = await _unitOfWork.Drivers.GetByIdAsync(driverId);
-            if (driver == null) return false;
+            if (driver == null)
+            {
+                _logger.LogWarning("Cập nhật thất bại: Không tìm thấy tài xế ID {DriverId}", driverId);
+                return false;
+            }
 
             if (!string.IsNullOrEmpty(dto.FullName))
                 driver.User.FullName = dto.FullName.Trim();
@@ -312,9 +327,20 @@ namespace FMS.ServiceLayer.Implementation
             if (!string.IsNullOrEmpty(dto.DriverStatus))
                 driver.DriverStatus = dto.DriverStatus;
 
-            _unitOfWork.Drivers.Update(driver);
-            await _unitOfWork.SaveChangesAsync();
-            return true;
+            try
+            {
+                _unitOfWork.Drivers.Update(driver);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Cập nhật thông tin tài xế {DriverId} thành công vào Database.", driverId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi xảy ra khi lưu thay đổi cho tài xế {DriverId}", driverId);
+                throw; // Để Middleware xử lý tiếp
+            }
+         
         }
 
         public async Task<bool> DeleteDriverAsync(int driverId)

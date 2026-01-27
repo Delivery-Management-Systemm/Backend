@@ -202,29 +202,38 @@ namespace FMS.ServiceLayer.Implementation
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
-            var normalizedPlate = dto.LicensePlate.Trim().ToUpperInvariant();
-            var exists = await _unitOfWork.Vehicles.Query().AnyAsync(v => v.LicensePlate.ToUpper() == normalizedPlate);
-            if (exists)
-                throw new InvalidOperationException("Biển số xe đã tồn tại trong hệ thống.");
-
-            int requiredLicenseClassId = SuggestLicenseClass(dto.VehicleType, dto.Capacity);
-            var vehicle = new Vehicle
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
+            try
             {
-                LicensePlate = normalizedPlate,
-                VehicleType = dto.VehicleType.Trim(),
-                VehicleBrand = dto.VehicleBrand.Trim(),
-                VehicleModel = dto.VehicleModel.Trim(),
-                ManufacturedYear = dto.ManufacturedYear,
-                Capacity = dto.Capacity.Trim(),
-                CurrentKm = dto.CurrentKm,
-                FuelType = dto.FuelType,
-                VehicleStatus = "available",
-                RequiredLicenseClassID = requiredLicenseClassId
-            };
-            await _unitOfWork.Vehicles.AddAsync(vehicle);
-            await _unitOfWork.SaveChangesAsync();
-            return vehicle;
+                var normalizedPlate = dto.LicensePlate.Trim().ToUpperInvariant();
+
+                var vehicle = new Vehicle
+                {
+                    LicensePlate = normalizedPlate,
+                    VehicleType = dto.VehicleType.Trim(),
+                    VehicleBrand = dto.VehicleBrand.Trim(),
+                    VehicleModel = dto.VehicleModel.Trim(),
+                    ManufacturedYear = dto.ManufacturedYear,
+                    Capacity = dto.Capacity.Trim(),
+                    CurrentKm = dto.CurrentKm,
+                    FuelType = dto.FuelType,
+                    VehicleStatus = "available",
+                    RequiredLicenseClassID = SuggestLicenseClass(dto.VehicleType, dto.Capacity)
+                };
+
+                await _unitOfWork.Vehicles.AddAsync(vehicle);
+                await _unitOfWork.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+                return vehicle;
+            }
+            catch (DbUpdateException ex)
+            {
+                await transaction.RollbackAsync();
+                throw new InvalidOperationException("Biển số xe đã tồn tại.", ex);
+            }
         }
+
 
         public async Task<bool> UpdateVehicleAsync(int vehicleId, VehicleUpdateDto dto)
         {
