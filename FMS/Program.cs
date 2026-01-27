@@ -10,6 +10,7 @@ using FMS.DAL.Implementation;
 using FMS.ServiceLayer.Interface;
 using FMS.ServiceLayer.Implementation;
 using Microsoft.AspNetCore.RateLimiting;
+using FMS.Middleware;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -166,6 +167,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
